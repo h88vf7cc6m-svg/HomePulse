@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import logo from '../assets/logo.png'
 
 export default function Auth() {
   const [mode, setMode] = useState('signin')
@@ -42,21 +43,18 @@ export default function Auth() {
     <div className="page" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '100vh' }}>
       <div style={{ textAlign: 'center', marginBottom: 32 }}>
         <div
-          className="gradient-bg"
           style={{
             width: 64,
             height: 64,
             borderRadius: 18,
             margin: '0 auto 16px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 30,
+            overflow: 'hidden',
+            boxShadow: '0 4px 20px rgba(0,201,167,0.4)',
           }}
         >
-          🏠
+          <img src={logo} alt="HomePulse" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>
-        <h1 style={{ fontSize: 24, fontWeight: 800 }}>HomePulse</h1>
+        <h1 className="gradient-text" style={{ fontSize: 24, fontWeight: 800 }}>HomePulse</h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginTop: 4 }}>
           Keep your home running smoothly
         </p>
