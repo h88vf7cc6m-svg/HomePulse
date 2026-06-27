@@ -11,6 +11,7 @@ export default function Auth() {
   const [errors, setErrors] = useState({})
   const [submitting, setSubmitting] = useState(false)
   const [resetSent, setResetSent] = useState(false)
+  const [confirmationSent, setConfirmationSent] = useState(false)
   const { signIn, signUp, requestPasswordReset } = useAuth()
   const navigate = useNavigate()
 
@@ -29,11 +30,28 @@ export default function Auth() {
     if (!validate()) return
 
     setSubmitting(true)
-    const { error } = mode === 'signin' ? await signIn(email, password) : await signUp(email, password)
+
+    if (mode === 'signin') {
+      const { error } = await signIn(email, password)
+      setSubmitting(false)
+      if (error) {
+        setErrors({ form: error.message })
+        return
+      }
+      navigate('/')
+      return
+    }
+
+    const { error, needsConfirmation } = await signUp(email, password)
     setSubmitting(false)
 
     if (error) {
       setErrors({ form: error.message })
+      return
+    }
+
+    if (needsConfirmation) {
+      setConfirmationSent(true)
       return
     }
 
@@ -78,6 +96,27 @@ export default function Auth() {
       </div>
 
       <div className="card">
+        {confirmationSent ? (
+          <div style={{ textAlign: 'center', padding: '12px 4px' }}>
+            <p style={{ fontSize: 32, marginBottom: 12 }}>📧</p>
+            <p style={{ fontWeight: 700, fontSize: 15, marginBottom: 8 }}>Check your email</p>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>
+              We sent a confirmation link to <strong>{email}</strong>. Click it to activate your
+              account, then come back here to sign in.
+            </p>
+            <button
+              className="btn-secondary"
+              style={{ marginTop: 20 }}
+              onClick={() => {
+                setConfirmationSent(false)
+                setMode('signin')
+              }}
+            >
+              Back to Sign In
+            </button>
+          </div>
+        ) : (
+        <>
         <div style={{ display: 'flex', marginBottom: 20, background: 'var(--navy-light)', borderRadius: 13, padding: 4 }}>
           <button
             onClick={() => setMode('signin')}
@@ -167,6 +206,8 @@ export default function Auth() {
             {submitting ? 'Please wait...' : mode === 'signin' ? 'Sign In' : 'Create Account'}
           </button>
         </form>
+        </>
+        )}
       </div>
     </div>
   )
