@@ -10,7 +10,8 @@ export default function Auth() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [errors, setErrors] = useState({})
   const [submitting, setSubmitting] = useState(false)
-  const { signIn, signUp } = useAuth()
+  const [resetSent, setResetSent] = useState(false)
+  const { signIn, signUp, requestPasswordReset } = useAuth()
   const navigate = useNavigate()
 
   const validate = () => {
@@ -37,6 +38,22 @@ export default function Auth() {
     }
 
     navigate('/')
+  }
+
+  const handleForgotPassword = async () => {
+    if (!email.trim()) {
+      setErrors({ email: 'Enter your email above first' })
+      return
+    }
+    setSubmitting(true)
+    const { error } = await requestPasswordReset(email.trim())
+    setSubmitting(false)
+
+    if (error) {
+      setErrors({ form: error.message })
+      return
+    }
+    setResetSent(true)
   }
 
   return (
@@ -114,6 +131,22 @@ export default function Auth() {
             />
             {errors.password && <p className="error-text">{errors.password}</p>}
           </div>
+
+          {mode === 'signin' && (
+            <div style={{ marginBottom: 20, textAlign: 'right' }}>
+              {resetSent ? (
+                <span style={{ fontSize: 12, color: 'var(--teal)' }}>Check your email for a reset link.</span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600 }}
+                >
+                  Forgot password?
+                </button>
+              )}
+            </div>
+          )}
 
           {mode === 'signup' && (
             <div style={{ marginBottom: 20 }}>

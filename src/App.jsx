@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import Auth from './pages/Auth'
+import ResetPassword from './pages/ResetPassword'
 import Dashboard from './pages/Dashboard'
 import Tasks from './pages/Tasks'
 import Vendors from './pages/Vendors'
@@ -9,7 +10,7 @@ import BottomNav from './components/BottomNav'
 
 function Layout({ children }) {
   const location = useLocation()
-  const showNav = location.pathname !== '/auth'
+  const showNav = location.pathname !== '/auth' && location.pathname !== '/reset-password'
 
   return (
     <>
@@ -25,6 +26,7 @@ export default function App() {
       <Layout>
         <Routes>
           <Route path="/auth" element={<Auth />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route
             path="/"
             element={
