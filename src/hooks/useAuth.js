@@ -26,17 +26,8 @@ export function useAuth() {
   }
 
   const signUp = async (email, password) => {
-    const { data, error } = await supabase.auth.signUp({ email, password })
-    if (error) return { error }
-
-    if (data.user) {
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({ user_id: data.user.id })
-      if (profileError) return { error: profileError }
-    }
-
-    return { error: null }
+    const { error } = await supabase.auth.signUp({ email, password })
+    return { error }
   }
 
   const signOut = async () => {

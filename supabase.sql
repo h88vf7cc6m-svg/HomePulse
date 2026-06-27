@@ -81,3 +81,23 @@ CREATE POLICY "vendors_update_own" ON vendors
 
 CREATE POLICY "vendors_delete_own" ON vendors
   FOR DELETE USING (auth.uid() = user_id);
+
+-- Auto-create a profile row whenever a new auth user is created.
+-- Runs with elevated privileges so it works even before email confirmation
+-- (i.e. before the user has an authenticated session), bypassing RLS safely.
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  INSERT INTO public.profiles (user_id)
+  VALUES (NEW.id);
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
