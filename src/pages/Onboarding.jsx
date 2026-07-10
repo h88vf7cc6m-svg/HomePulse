@@ -92,7 +92,7 @@ export default function Onboarding() {
     setSaving(true)
     localStorage.setItem('homepulse_region', answers.region)
 
-    await supabase
+    const { error } = await supabase
       .from('profiles')
       .update({
         owner_type: answers.owner_type,
@@ -104,7 +104,9 @@ export default function Onboarding() {
       .eq('user_id', user.id)
 
     setSaving(false)
-    navigate('/')
+    if (!error) {
+      navigate('/', { state: { onboardingComplete: true } })
+    }
   }
 
   const progressPct = (step / STEPS) * 100

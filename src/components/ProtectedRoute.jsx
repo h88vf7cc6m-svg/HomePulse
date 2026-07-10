@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
 
 export default function ProtectedRoute({ children, skipOnboarding = false }) {
   const { session, loading, user } = useAuth()
+  const location = useLocation()
   const [checkingOnboarding, setCheckingOnboarding] = useState(true)
   const [onboardingComplete, setOnboardingComplete] = useState(true)
 
@@ -36,7 +37,7 @@ export default function ProtectedRoute({ children, skipOnboarding = false }) {
     return <Navigate to="/auth" replace />
   }
 
-  if (!onboardingComplete && !skipOnboarding) {
+  if (!onboardingComplete && !skipOnboarding && !location.state?.onboardingComplete) {
     return <Navigate to="/onboarding" replace />
   }
 
