@@ -3,6 +3,7 @@ import Auth from './pages/Auth'
 import ResetPassword from './pages/ResetPassword'
 import Dashboard from './pages/Dashboard'
 import Tasks from './pages/Tasks'
+import Templates from './pages/Templates'
 import Vendors from './pages/Vendors'
 import Settings from './pages/Settings'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -10,7 +11,7 @@ import BottomNav from './components/BottomNav'
 
 function Layout({ children }) {
   const location = useLocation()
-  const showNav = location.pathname !== '/auth' && location.pathname !== '/reset-password'
+  const showNav = !['/auth', '/reset-password'].includes(location.pathname)
 
   return (
     <>
@@ -40,6 +41,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <Tasks />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/templates"
+            element={
+              <ProtectedRoute>
+                <Templates />
               </ProtectedRoute>
             }
           />
