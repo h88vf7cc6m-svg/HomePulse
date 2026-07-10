@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import Auth from './pages/Auth'
 import ResetPassword from './pages/ResetPassword'
+import Onboarding from './pages/Onboarding'
 import Dashboard from './pages/Dashboard'
 import Tasks from './pages/Tasks'
 import Templates from './pages/Templates'
@@ -11,7 +12,7 @@ import BottomNav from './components/BottomNav'
 
 function Layout({ children }) {
   const location = useLocation()
-  const showNav = !['/auth', '/reset-password'].includes(location.pathname)
+  const showNav = !['/auth', '/reset-password', '/onboarding'].includes(location.pathname)
 
   return (
     <>
@@ -28,6 +29,14 @@ export default function App() {
         <Routes>
           <Route path="/auth" element={<Auth />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route
+            path="/onboarding"
+            element={
+              <ProtectedRoute skipOnboarding>
+                <Onboarding />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/"
             element={
