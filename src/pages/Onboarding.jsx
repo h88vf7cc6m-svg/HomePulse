@@ -29,6 +29,9 @@ const REGIONS = [
   { id: 'southeast', icon: '🌴', label: 'Florida / Southeast', desc: 'Hurricane & heat prep' },
   { id: 'midwest', icon: '🌪️', label: 'Midwest', desc: 'Tornado & winter storm prep' },
   { id: 'northeast', icon: '❄️', label: 'Northeast', desc: 'Nor\'easter & ice storm prep' },
+  { id: 'northwest', icon: '🌧️', label: 'Pacific Northwest', desc: 'Rain, wind & wildfire smoke prep' },
+  { id: 'southwest', icon: '☀️', label: 'Southwest', desc: 'Extreme heat, drought & flash flood prep' },
+  { id: 'west', icon: '🔥', label: 'West / California', desc: 'Wildfire, earthquake & drought prep' },
 ]
 
 function OptionButton({ selected, onClick, icon, label, desc }) {
