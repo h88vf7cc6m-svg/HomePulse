@@ -105,7 +105,8 @@ export default function Onboarding() {
 
     setSaving(false)
     if (!error) {
-      navigate('/', { state: { onboardingComplete: true } })
+      localStorage.setItem('homepulse_onboarding_complete', 'true')
+      navigate('/')
     }
   }
 

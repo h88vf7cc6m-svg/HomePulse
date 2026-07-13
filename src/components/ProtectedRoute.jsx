@@ -1,16 +1,20 @@
 import { useEffect, useState } from 'react'
-import { Navigate, useLocation } from 'react-router-dom'
+import { Navigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
 
 export default function ProtectedRoute({ children, skipOnboarding = false }) {
   const { session, loading, user } = useAuth()
-  const location = useLocation()
   const [checkingOnboarding, setCheckingOnboarding] = useState(true)
   const [onboardingComplete, setOnboardingComplete] = useState(true)
 
   useEffect(() => {
     if (!user) {
+      setCheckingOnboarding(false)
+      return
+    }
+    if (localStorage.getItem('homepulse_onboarding_complete') === 'true') {
+      setOnboardingComplete(true)
       setCheckingOnboarding(false)
       return
     }
@@ -20,6 +24,9 @@ export default function ProtectedRoute({ children, skipOnboarding = false }) {
       .eq('user_id', user.id)
       .maybeSingle()
       .then(({ data }) => {
+        if (data?.onboarding_complete) {
+          localStorage.setItem('homepulse_onboarding_complete', 'true')
+        }
         setOnboardingComplete(!!data?.onboarding_complete)
         setCheckingOnboarding(false)
       })
@@ -37,7 +44,7 @@ export default function ProtectedRoute({ children, skipOnboarding = false }) {
     return <Navigate to="/auth" replace />
   }
 
-  if (!onboardingComplete && !skipOnboarding && !location.state?.onboardingComplete) {
+  if (!onboardingComplete && !skipOnboarding) {
     return <Navigate to="/onboarding" replace />
   }
 
