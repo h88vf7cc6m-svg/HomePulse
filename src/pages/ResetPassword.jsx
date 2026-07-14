@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { supabase } from '../lib/supabase'
 import logo from '../assets/logo.png'
 
 export default function ResetPassword() {
@@ -9,8 +10,22 @@ export default function ResetPassword() {
   const [errors, setErrors] = useState({})
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
+  const [ready, setReady] = useState(false)
   const { updatePassword } = useAuth()
   const navigate = useNavigate()
+
+  useEffect(() => {
+    const { data: listener } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
+        setReady(true)
+      }
+    })
+    // Also check if session already exists (page reload case)
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) setReady(true)
+    })
+    return () => listener.subscription.unsubscribe()
+  }, [])
 
   const validate = () => {
     const next = {}
@@ -35,6 +50,14 @@ export default function ResetPassword() {
 
     setDone(true)
     setTimeout(() => navigate('/'), 1500)
+  }
+
+  if (!ready) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
+        <p style={{ color: 'var(--text-secondary)' }}>Verifying reset link...</p>
+      </div>
+    )
   }
 
   return (

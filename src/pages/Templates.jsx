@@ -33,7 +33,9 @@ export default function Templates() {
       if (!region) return []
       return tmpl.regional[region]?.tasks || []
     }
-    return tmpl.tasks || []
+    const general = tmpl.tasks || []
+    const regional = (region && tmpl.regional?.[region]?.tasks) || []
+    return [...general, ...regional]
   }
 
   const getTipsForCategory = (catId) => {
@@ -41,6 +43,9 @@ export default function Templates() {
     if (!tmpl) return ''
     if (catId === 'weather' && region) {
       return tmpl.regional[region]?.tips || tmpl.tips
+    }
+    if (region && tmpl.regional?.[region]?.tips) {
+      return `${tmpl.tips ? tmpl.tips + ' ' : ''}${tmpl.regional[region].tips}`
     }
     return tmpl.tips || ''
   }
