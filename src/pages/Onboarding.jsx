@@ -70,7 +70,7 @@ function OptionButton({ selected, onClick, icon, label, desc }) {
 }
 
 export default function Onboarding() {
-  const { user } = useAuth()
+  const { user, completeOnboarding } = useAuth()
   const navigate = useNavigate()
   const [step, setStep] = useState(1)
   const [saving, setSaving] = useState(false)
@@ -108,7 +108,7 @@ export default function Onboarding() {
 
     setSaving(false)
     if (!error) {
-      localStorage.setItem('homepulse_onboarding_complete', 'true')
+      completeOnboarding()
       navigate('/')
     }
   }
