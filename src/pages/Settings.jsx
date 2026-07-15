@@ -184,6 +184,10 @@ export default function Settings() {
         <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 8 }}>
           Keep your home running smoothly.
         </p>
+        <div style={{ display: 'flex', gap: 16, marginTop: 12, justifyContent: 'center' }}>
+          <a href="/privacy" style={{ fontSize: 12, color: 'var(--teal)' }}>Privacy Policy</a>
+          <a href="/terms" style={{ fontSize: 12, color: 'var(--teal)' }}>Terms of Service</a>
+        </div>
       </div>
 
       <button

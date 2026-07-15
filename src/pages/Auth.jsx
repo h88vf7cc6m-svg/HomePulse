@@ -205,6 +205,15 @@ export default function Auth() {
           <button type="submit" className="btn-primary" disabled={submitting}>
             {submitting ? 'Please wait...' : mode === 'signin' ? 'Sign In' : 'Create Account'}
           </button>
+
+          {mode === 'signup' && (
+            <p style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', marginTop: 14, lineHeight: 1.6 }}>
+              By creating an account you agree to our{' '}
+              <a href="/terms" style={{ color: 'var(--teal)' }}>Terms of Service</a>
+              {' '}and{' '}
+              <a href="/privacy" style={{ color: 'var(--teal)' }}>Privacy Policy</a>.
+            </p>
+          )}
         </form>
         </>
         )}
