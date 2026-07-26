@@ -1,16 +1,20 @@
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTasks } from '../hooks/useTasks'
+import { useAuth } from '../hooks/useAuth'
 import StatCard from '../components/StatCard'
 import HealthBar from '../components/HealthBar'
 import TaskCard from '../components/TaskCard'
 import PulseWave from '../components/PulseWave'
-import { CATEGORIES } from '../constants/categories'
+import { getCategories } from '../constants/categories'
 import logo from '../assets/logo.png'
 
 export default function Dashboard() {
   const { tasks, loading, error, toggleComplete } = useTasks()
+  const { accountType } = useAuth()
   const navigate = useNavigate()
+  const isBusiness = accountType === 'business'
+  const CATEGORIES = useMemo(() => getCategories(accountType), [accountType])
 
   const stats = useMemo(() => {
     const today = new Date()
@@ -35,7 +39,7 @@ export default function Dashboard() {
       if (!t.completed && map[t.category] !== undefined) map[t.category] += 1
     })
     return map
-  }, [tasks])
+  }, [tasks, CATEGORIES])
 
   if (loading) {
     return (
@@ -57,7 +61,7 @@ export default function Dashboard() {
           <h1 className="app-name gradient-text">HomePulse</h1>
         </div>
         <div className="app-tagline">
-          <PulseWave /> &nbsp;Home Health Dashboard
+          <PulseWave /> &nbsp;{isBusiness ? 'Business Health Dashboard' : 'Home Health Dashboard'}
         </div>
         <div className="stats-row">
           <StatCard label="Overdue" value={stats.overdue.length} color="var(--danger)" />

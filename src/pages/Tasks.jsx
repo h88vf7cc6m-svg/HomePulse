@@ -1,26 +1,29 @@
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useTasks } from '../hooks/useTasks'
+import { useAuth } from '../hooks/useAuth'
 import TaskCard from '../components/TaskCard'
 import CategoryChip from '../components/CategoryChip'
 import Modal from '../components/Modal'
-import { CATEGORIES, FREQUENCIES } from '../constants/categories'
+import { getCategories, FREQUENCIES } from '../constants/categories'
 
-const emptyForm = {
+const makeEmptyForm = (categories) => ({
   title: '',
-  category: CATEGORIES[0].id,
+  category: categories[0]?.id || '',
   frequency: FREQUENCIES[0],
   due_date: '',
   vendor_name: '',
   notes: '',
-}
+})
 
 export default function Tasks() {
   const { tasks, loading, error, addTask, toggleComplete, deleteTask } = useTasks()
+  const { accountType } = useAuth()
+  const CATEGORIES = useMemo(() => getCategories(accountType), [accountType])
   const [searchParams, setSearchParams] = useSearchParams()
   const activeCategory = searchParams.get('category') || 'all'
   const [modalOpen, setModalOpen] = useState(false)
-  const [form, setForm] = useState(emptyForm)
+  const [form, setForm] = useState(() => makeEmptyForm(CATEGORIES))
   const [formErrors, setFormErrors] = useState({})
   const [submitting, setSubmitting] = useState(false)
 
@@ -72,7 +75,7 @@ export default function Tasks() {
       return
     }
 
-    setForm(emptyForm)
+    setForm(makeEmptyForm(CATEGORIES))
     setFormErrors({})
     setModalOpen(false)
   }
@@ -106,7 +109,13 @@ export default function Tasks() {
         ))
       )}
 
-      <button onClick={() => setModalOpen(true)} className="fab">
+      <button
+        onClick={() => {
+          setForm(makeEmptyForm(CATEGORIES))
+          setModalOpen(true)
+        }}
+        className="fab"
+      >
         <span style={{ fontSize: 16 }}>+</span> Add Task
       </button>
 

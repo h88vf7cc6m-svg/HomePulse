@@ -10,7 +10,37 @@ export const CATEGORIES = [
   { id: 'weather', name: 'Weather Emergency', icon: '🌪️', color: '#FF5252' },
 ]
 
-export const getCategory = (id) => CATEGORIES.find((c) => c.id === id) || CATEGORIES[0]
+// Categories that only apply to the small-business side of the app.
+// Shared categories (hvac, plumbing, electrical, insurance, pest,
+// exterior, weather) are reused as-is from CATEGORIES above.
+export const BUSINESS_ONLY_CATEGORIES = [
+  { id: 'fire_safety', name: 'Fire & Life Safety', icon: '🧯', color: '#FF5252' },
+  { id: 'security', name: 'Security Systems', icon: '📹', color: '#7C4DFF' },
+  { id: 'licenses', name: 'Licenses & Permits', icon: '📜', color: '#FFB300' },
+  { id: 'equipment', name: 'Equipment & IT', icon: '🖥️', color: '#2A6DD9' },
+]
+
+const byId = (id) => [...CATEGORIES, ...BUSINESS_ONLY_CATEGORIES].find((c) => c.id === id)
+
+export const BUSINESS_CATEGORIES = [
+  byId('hvac'),
+  byId('plumbing'),
+  byId('electrical'),
+  byId('fire_safety'),
+  byId('security'),
+  byId('insurance'),
+  byId('licenses'),
+  byId('pest'),
+  byId('equipment'),
+  byId('exterior'),
+  byId('weather'),
+]
+
+export const getCategories = (accountType) =>
+  accountType === 'business' ? BUSINESS_CATEGORIES : CATEGORIES
+
+export const getCategory = (id) =>
+  [...CATEGORIES, ...BUSINESS_ONLY_CATEGORIES].find((c) => c.id === id) || CATEGORIES[0]
 
 export const FREQUENCIES = ['Monthly', 'Quarterly', 'Seasonal', 'Annual', 'One-time']
 
@@ -410,3 +440,169 @@ export const TASK_TEMPLATES = {
     },
   },
 }
+
+export const BUSINESS_TASK_TEMPLATES = {
+  hvac: {
+    title: 'Commercial HVAC Maintenance',
+    icon: '🌬️',
+    tips: 'Commercial HVAC systems run longer hours than residential units and directly affect staff productivity and customer comfort. A service contract with a commercial provider catches problems before they cause downtime.',
+    tasks: [
+      { title: 'Replace/Check Air Filters', frequency: 'Monthly', notes: 'Commercial systems often run 10+ hours a day — check filters monthly and replace every 1-2 months. Dirty filters raise energy costs and strain the compressor.' },
+      { title: 'Schedule Bi-Annual Commercial HVAC Service', frequency: 'Annual', notes: 'Book a licensed commercial HVAC contractor each spring and fall. Rooftop units (RTUs) common in commercial buildings need coil cleaning, refrigerant checks, and belt inspection.' },
+      { title: 'Inspect Rooftop Units for Leaks and Damage', frequency: 'Seasonal', notes: 'Walk the roof (or hire an inspector) to check RTU condition, curb flashing, and drainage. Roof leaks around HVAC units are a common source of costly water damage claims.' },
+      { title: 'Test Programmable/Smart Thermostat Schedules', frequency: 'Quarterly', notes: 'Confirm business-hours setback schedules are still accurate after any staffing or hour changes. Incorrect schedules waste significant energy costs in commercial spaces.' },
+      { title: 'Clean Condensate Drains and Check for Mold', frequency: 'Quarterly', notes: 'Clogged condensate lines can shut down a unit or cause ceiling tile damage. Flush lines quarterly, especially in high-humidity businesses like restaurants.' },
+    ],
+  },
+  plumbing: {
+    title: 'Commercial Plumbing',
+    icon: '🔧',
+    tips: 'Plumbing failures in a commercial space can shut down operations for a day or more. Preventive inspection is far cheaper than emergency service and lost revenue.',
+    tasks: [
+      { title: 'Inspect Restroom and Break Room Fixtures', frequency: 'Monthly', notes: 'Check for leaks, running toilets, and low water pressure in customer- and employee-facing restrooms. Public-facing leaks damage your business image as well as your building.' },
+      { title: 'Test Backflow Prevention Device', frequency: 'Annual', notes: 'Most municipalities require annual backflow preventer testing and certification for commercial properties — check with your water utility for local requirements.' },
+      { title: 'Inspect Grease Trap / Interceptor', frequency: 'Quarterly', notes: 'Required for food-service businesses. Pump and clean per your local health code (often quarterly) to avoid fines and sewer backups.' },
+      { title: 'Flush Water Heater(s)', frequency: 'Annual', notes: 'Commercial water heaters see heavier use — flush annually to remove sediment and maintain capacity for peak demand periods.' },
+      { title: 'Locate and Label Main Water Shutoff', frequency: 'Annual', notes: 'Ensure all managers/staff know the shutoff location. A fast shutoff during a leak can save thousands in water damage and business interruption.' },
+    ],
+  },
+  electrical: {
+    title: 'Commercial Electrical',
+    icon: '⚡',
+    tips: 'Electrical failures are a leading cause of business fires and equipment loss. Commercial panels and wiring should be inspected more frequently than residential due to higher load demands.',
+    tasks: [
+      { title: 'Test GFCI/AFCI Outlets', frequency: 'Quarterly', notes: 'Test all GFCI outlets in restrooms, kitchens, and exterior areas. Required by code in most commercial occupancies.' },
+      { title: 'Inspect Electrical Panel and Load', frequency: 'Annual', notes: 'Have a licensed electrician check for overloaded circuits, corrosion, or double-tapped breakers — especially after adding new equipment.' },
+      { title: 'Check Emergency and Exit Lighting', frequency: 'Monthly', notes: 'Test battery backup on exit signs and emergency lighting. Required by fire code — document each test for inspections.' },
+      { title: 'Inspect Exterior/Parking Lot Lighting', frequency: 'Seasonal', notes: 'Replace bulbs and check photocells on exterior and parking lot lighting. Well-lit exteriors reduce liability risk for customers and staff.' },
+      { title: 'Schedule Thermal Imaging Scan', frequency: 'Annual', notes: 'A thermal scan of your electrical panel by a professional identifies hot spots before they cause fires or equipment failure — recommended annually for commercial properties.' },
+    ],
+  },
+  fire_safety: {
+    title: 'Fire & Life Safety',
+    icon: '🧯',
+    tips: 'Fire and life-safety compliance isn\'t optional for a business — most items below are required by local fire code and checked during inspections. Keep dated records of every test.',
+    tasks: [
+      { title: 'Inspect Fire Extinguishers', frequency: 'Monthly', notes: 'Visually check gauge, pin, and accessibility for every extinguisher on-site. Document the check on the tag. Professional inspection and recharge is typically required annually.' },
+      { title: 'Test Fire Alarm System', frequency: 'Quarterly', notes: 'Have a licensed fire alarm company test the panel, pull stations, and horns/strobes. Many jurisdictions require certified testing with a report on file.' },
+      { title: 'Inspect Fire Sprinkler System', frequency: 'Annual', notes: 'A licensed contractor should inspect sprinkler heads, valves, and water flow annually (more often for high-hazard occupancies). Keep the inspection tag current.' },
+      { title: 'Check Emergency Exit Routes', frequency: 'Quarterly', notes: 'Walk all exit paths to confirm they are unobstructed, exit signs are lit, and doors open freely. Blocked exits are one of the most common fire code violations.' },
+      { title: 'Review and Practice Emergency Evacuation Plan', frequency: 'Annual', notes: 'Update your posted evacuation plan and run a fire drill with staff annually. Many jurisdictions require this above a certain occupancy size.' },
+      { title: 'Service Kitchen Suppression System', frequency: 'Seasonal', notes: 'Restaurants and commercial kitchens must have hood suppression systems serviced (often every 6 months) by a licensed contractor.' },
+    ],
+  },
+  security: {
+    title: 'Security Systems',
+    icon: '📹',
+    tips: 'A working security system protects your inventory, cash, employees, and customers — and can lower your commercial insurance premium. Don\'t wait for an incident to find out a camera was down.',
+    tasks: [
+      { title: 'Test Alarm System and Monitoring', frequency: 'Monthly', notes: 'Trigger a test alarm and confirm your monitoring company receives and responds to it. Update the call list any time staff changes.' },
+      { title: 'Check Security Camera Coverage and Recording', frequency: 'Monthly', notes: 'Review footage from each camera to confirm angles are correct, lenses are clean, and recordings are being saved for the required retention period.' },
+      { title: 'Inspect Access Control / Door Locks', frequency: 'Quarterly', notes: 'Test keycard readers, keypads, and locks on all entry points. Deactivate access for any former employees immediately upon separation.' },
+      { title: 'Test Panic Buttons / Duress Alarms', frequency: 'Quarterly', notes: 'If installed at registers or offices, confirm panic buttons still trigger a response from your monitoring company.' },
+      { title: 'Review Cash-Handling and Safe Security', frequency: 'Annual', notes: 'Confirm safes are bolted down, combinations are changed after staff turnover, and cash-handling procedures are being followed.' },
+    ],
+  },
+  insurance: {
+    title: 'Business Insurance',
+    icon: '📋',
+    tips: 'Business insurance needs shift as your revenue, staff count, and equipment value change. An annual review with your agent prevents being underinsured after a loss.',
+    tasks: [
+      { title: 'Review General Liability Policy', frequency: 'Annual', notes: 'Confirm coverage limits match your current revenue and risk exposure. Many policies need updated limits as a business grows.' },
+      { title: 'Review Commercial Property Insurance', frequency: 'Annual', notes: 'Verify your policy reflects the current replacement cost of your building, equipment, and inventory — not what you paid years ago.' },
+      { title: "Confirm Workers' Compensation Coverage", frequency: 'Annual', notes: 'Required in nearly every state if you have employees. Confirm your policy reflects current headcount and payroll to avoid audit penalties.' },
+      { title: 'Review Business Interruption Coverage', frequency: 'Annual', notes: 'This covers lost income if you must close temporarily after a covered event (fire, storm). Confirm the coverage period is long enough for your recovery timeline.' },
+      { title: 'Update Equipment and Inventory Valuation', frequency: 'Annual', notes: 'Document current equipment and inventory with photos/receipts for accurate claims. Store a copy off-site or in the cloud.' },
+    ],
+  },
+  licenses: {
+    title: 'Licenses & Permits',
+    icon: '📜',
+    tips: 'Operating without a current license or permit can result in fines or a forced shutdown. Track every renewal date in one place — don\'t rely on remembering.',
+    tasks: [
+      { title: 'Renew Business License', frequency: 'Annual', notes: 'Check your city/county renewal date — many are tied to your original registration date, not the calendar year.' },
+      { title: 'Renew Health Department Permit', frequency: 'Annual', notes: 'Required for food service, salons, childcare, and other regulated businesses. Schedule your inspection ahead of the renewal deadline.' },
+      { title: 'Renew Professional/Occupational Licenses', frequency: 'Annual', notes: 'Confirm any required trade, contractor, or professional licenses for you or your staff are current and continuing education requirements are met.' },
+      { title: 'Review Sign Permit Compliance', frequency: 'One-time', notes: 'Confirm exterior signage is still compliant with current local sign ordinances, especially after any rebrand or new signage installation.' },
+      { title: 'Renew Fire Department Occupancy Permit', frequency: 'Annual', notes: 'Many jurisdictions require an annual fire inspection and occupancy permit renewal — schedule ahead of your expiration date to avoid a lapse.' },
+    ],
+  },
+  pest: {
+    title: 'Commercial Pest Control',
+    icon: '🐜',
+    tips: 'Pest problems in a commercial space — especially food service or retail — can trigger health code violations and damage your reputation. A proactive contract is much cheaper than a reactive one.',
+    tasks: [
+      { title: 'Scheduled Commercial Pest Control Service', frequency: 'Quarterly', notes: 'Maintain a service contract with a licensed commercial pest control company, particularly important for restaurants, grocery, and healthcare.' },
+      { title: 'Inspect Loading Dock and Storage Areas', frequency: 'Monthly', notes: 'Loading docks and storage rooms are common pest entry points. Check for gaps, spillage, and improperly stored waste.' },
+      { title: 'Review Health Inspection Pest Findings', frequency: 'Seasonal', notes: 'Address any pest-related notes from your last health or fire inspection promptly and document the corrective action.' },
+      { title: 'Maintain Dumpster and Exterior Waste Areas', frequency: 'Monthly', notes: 'Keep dumpster lids closed and the surrounding area clean — exterior waste areas are the top attractant for rodents and insects at commercial properties.' },
+    ],
+  },
+  equipment: {
+    title: 'Equipment & IT',
+    icon: '🖥️',
+    tips: 'Downtime on a POS system, server, or key piece of equipment directly costs you revenue. Track service contracts and warranty dates so nothing lapses unnoticed.',
+    tasks: [
+      { title: 'Back Up Business Data', frequency: 'Monthly', notes: "Confirm automated backups of POS, accounting, and customer data are actually completing successfully — don't assume, verify." },
+      { title: 'Service Critical Business Equipment', frequency: 'Seasonal', notes: 'Schedule maintenance for equipment central to your operation (kitchen equipment, manufacturing machinery, medical devices) per manufacturer recommendations.' },
+      { title: 'Review Software and Warranty Renewals', frequency: 'Annual', notes: 'Audit POS, security, and software subscriptions plus hardware warranties to avoid unexpected lapses or auto-renewal surprises.' },
+      { title: 'Test Point-of-Sale and Payment Systems', frequency: 'Quarterly', notes: 'Confirm card readers, POS terminals, and backup manual processes all work — including a plan for processing sales if systems go down.' },
+      { title: 'Update Antivirus and Network Security', frequency: 'Quarterly', notes: 'Confirm firewall, antivirus, and software patches are current on all business devices to reduce the risk of a data breach.' },
+    ],
+  },
+  exterior: {
+    title: 'Exterior & Facility',
+    icon: '🏡',
+    tips: "Your building's exterior is a customer's first impression and a liability exposure. Regular upkeep prevents accidents, code violations, and costly repairs.",
+    tasks: [
+      { title: 'Inspect Parking Lot and Walkways', frequency: 'Quarterly', notes: 'Check for cracks, potholes, and trip hazards in customer parking areas and walkways. Slip-and-fall claims are among the most common commercial liability claims.' },
+      { title: 'Inspect Roof and Gutters', frequency: 'Seasonal', notes: 'Commercial flat roofs need regular drain and membrane inspection. Water pooling on a flat roof is a leading cause of interior damage.' },
+      { title: 'Check Exterior Signage and Lighting', frequency: 'Quarterly', notes: 'Confirm signage is lit, secure, and code-compliant. Replace burnt-out bulbs and repair any loose mounting hardware.' },
+      { title: 'Landscaping and Snow/Ice Removal Plan', frequency: 'Seasonal', notes: 'Maintain a service contract for landscaping and, in applicable climates, snow/ice removal — unaddressed ice on walkways is a major liability exposure.' },
+      { title: 'Inspect ADA Accessibility Compliance', frequency: 'Annual', notes: 'Check ramps, door widths, and parking spaces remain ADA compliant. Non-compliance can result in fines or lawsuits.' },
+    ],
+  },
+  weather: {
+    title: 'Business Continuity & Weather Emergency',
+    icon: '🌪️',
+    tips: 'A business continuity plan is what separates a temporary closure from a permanent one after a disaster. Prepare data, communications, and physical protection before severe weather threatens.',
+    tasks: [],
+    regional: {
+      southeast: { name: 'Florida / Southeast — Hurricane Business Continuity', tips: 'Hurricane season runs June through November. Businesses that prepare in advance reopen faster and retain customers better than those that scramble last minute.', tasks: [
+        { title: 'Board or Shutter Storefront Windows', frequency: 'Annual', notes: 'Ensure shutters or plywood are pre-cut and ready before storm season, not after a warning is issued.' },
+        { title: 'Back Up Business Data Off-Site', frequency: 'Seasonal', notes: 'Confirm cloud backups of POS, accounting, and customer records ahead of hurricane season in case of physical damage to on-site servers.' },
+        { title: 'Prepare Employee Communication Plan', frequency: 'Annual', notes: "Establish how you'll notify staff of closures/reopening (group text, app) — cell towers may be down after a storm." },
+        { title: 'Review Business Interruption Insurance', frequency: 'Annual', notes: 'Confirm your policy covers hurricane-related closures and understand the waiting period before coverage begins.' },
+      ]},
+      midwest: { name: 'Midwest — Tornado & Winter Storm Continuity', tips: 'Severe spring storms and hard winters both threaten business operations. Have a plan and communication method for each.', tasks: [
+        { title: 'Designate Employee/Customer Tornado Shelter Area', frequency: 'Annual', notes: 'Identify and post the safest interior area for staff and customers during a tornado warning.' },
+        { title: 'Stock Backup Power for Point-of-Sale', frequency: 'Annual', notes: 'Consider a battery backup or generator hookup so you can still process transactions during short outages.' },
+        { title: 'Create Winter Closure Communication Plan', frequency: 'Annual', notes: "Establish how you'll notify staff and customers of weather-related closures via social media, phone tree, or website." },
+      ]},
+      northeast: { name: 'Northeast — Winter Storm & Nor\'easter Continuity', tips: 'Extended winter closures and frozen pipes are the top threats to Northeast businesses. Prepare before the first storm of the season.', tasks: [
+        { title: 'Stock Ice Melt and Snow Removal Plan for Entrances', frequency: 'Annual', notes: 'Contract snow removal in advance of winter — an icy entrance is a top liability and lost-revenue risk.' },
+        { title: 'Prepare Backup Heat Source for Pipes', frequency: 'Annual', notes: 'Prevent frozen pipes in unoccupied areas with backup heat or insulation, especially over long closures.' },
+        { title: 'Back Up Business Data Off-Site', frequency: 'Seasonal', notes: 'Confirm records are backed up off-site in case of storm-related power loss or damage.' },
+      ]},
+      northwest: { name: 'Pacific Northwest — Windstorm & Wildfire Smoke Continuity', tips: 'Multi-day power outages from windstorms and poor air quality from wildfire smoke both disrupt PNW businesses.', tasks: [
+        { title: 'Prepare for Extended Power Outages', frequency: 'Annual', notes: 'Windstorms can cut power for days — have a plan for refrigeration, POS, and security systems during an outage.' },
+        { title: 'Stock N95 Masks for Smoke Season', frequency: 'Seasonal', notes: 'Keep masks on hand for outdoor staff during wildfire smoke events; adjust HVAC to recirculate during poor air quality days.' },
+        { title: 'Back Up Business Data Off-Site', frequency: 'Seasonal', notes: 'Ensure cloud backups are current ahead of storm season.' },
+      ]},
+      southwest: { name: 'Southwest — Extreme Heat & Monsoon Continuity', tips: 'A failed AC or flooded entrance during peak season can shut a Southwest business down fast. Plan ahead for both.', tasks: [
+        { title: 'Confirm Backup Cooling Plan', frequency: 'Annual', notes: 'A failed AC during extreme heat can be a safety issue for staff and customers — know your backup plan and nearest cooling options.' },
+        { title: 'Prepare for Monsoon Flash Flooding', frequency: 'Seasonal', notes: 'Check drainage around entrances and loading areas before monsoon season; keep sandbags on hand if in a flood-prone area.' },
+        { title: 'Back Up Business Data Off-Site', frequency: 'Seasonal', notes: 'Confirm cloud backups ahead of storm season.' },
+      ]},
+      west: { name: 'West / California — Wildfire, Earthquake & PSPS Continuity', tips: 'California businesses face wildfire, earthquake, and utility power shutoff risk — all three need a documented continuity plan.', tasks: [
+        { title: 'Prepare for Public Safety Power Shutoffs (PSPS)', frequency: 'Annual', notes: 'Have a battery backup or generator plan for registers, refrigeration, and security systems during utility-initiated outages.' },
+        { title: 'Create Wildfire Evacuation and Closure Plan', frequency: 'Annual', notes: 'Know your evacuation zone and have a plan to notify staff/customers of closures during fire events.' },
+        { title: 'Secure Important Documents and Data Off-Site', frequency: 'Annual', notes: 'Store insurance, lease, and financial documents in the cloud and/or an off-site location in case of total loss.' },
+        { title: 'Bolt/Secure Heavy Equipment and Shelving', frequency: 'Annual', notes: 'Earthquake-strap tall shelving, equipment, and water heaters to prevent injury and inventory loss.' },
+      ]},
+    },
+  },
+}
+
+export const getTaskTemplates = (accountType) =>
+  accountType === 'business' ? BUSINESS_TASK_TEMPLATES : TASK_TEMPLATES

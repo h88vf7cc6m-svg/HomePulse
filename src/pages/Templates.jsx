@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CATEGORIES, REGIONS, TASK_TEMPLATES } from '../constants/categories'
+import { getCategories, getTaskTemplates, REGIONS } from '../constants/categories'
 import { useTasks } from '../hooks/useTasks'
+import { useAuth } from '../hooks/useAuth'
 import Modal from '../components/Modal'
 
 const REGION_KEY = 'homepulse_region'
@@ -15,6 +16,9 @@ function getTodayPlus(days) {
 export default function Templates() {
   const navigate = useNavigate()
   const { addTask } = useTasks()
+  const { accountType } = useAuth()
+  const CATEGORIES = useMemo(() => getCategories(accountType), [accountType])
+  const TASK_TEMPLATES = useMemo(() => getTaskTemplates(accountType), [accountType])
   const [region, setRegion] = useState(() => localStorage.getItem(REGION_KEY) || '')
   const [activeCategory, setActiveCategory] = useState(null)
   const [adding, setAdding] = useState(null)

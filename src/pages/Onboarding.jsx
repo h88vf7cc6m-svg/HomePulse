@@ -4,12 +4,26 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import logo from '../assets/logo.png'
 
-const STEPS = 3
+const STEPS = 4
+
+const ACCOUNT_TYPES = [
+  { id: 'homeowner', icon: '🏠', label: 'Homeowner', desc: 'Track maintenance for your home' },
+  { id: 'business', icon: '💼', label: 'Small Business Owner', desc: 'Track maintenance & compliance for your business' },
+]
 
 const OWNER_TYPES = [
   { id: 'first_time', icon: '🏠', label: 'First-Time Homeowner', desc: 'This is my first home' },
   { id: 'experienced', icon: '🏡', label: 'Experienced Homeowner', desc: 'I\'ve owned homes before' },
   { id: 'landlord', icon: '🏘️', label: 'Landlord / Investor', desc: 'I manage rental properties' },
+]
+
+const BUSINESS_TYPES = [
+  { id: 'retail', icon: '🛍️', label: 'Retail Store', desc: 'Storefront or shop' },
+  { id: 'restaurant', icon: '🍽️', label: 'Restaurant / Food Service', desc: 'Restaurant, cafe, or catering' },
+  { id: 'office', icon: '🏢', label: 'Office / Professional Services', desc: 'Office-based business' },
+  { id: 'medical', icon: '🩺', label: 'Medical / Healthcare', desc: 'Clinic, practice, or care facility' },
+  { id: 'warehouse', icon: '📦', label: 'Warehouse / Industrial', desc: 'Warehouse, shop, or plant' },
+  { id: 'other_biz', icon: '🏬', label: 'Other', desc: 'Something else' },
 ]
 
 const HOME_AGES = [
@@ -19,10 +33,23 @@ const HOME_AGES = [
   { id: 'older', icon: '🏛️', label: 'Older Home', desc: '30+ years old' },
 ]
 
+const BUILDING_AGES = [
+  { id: 'new_build', icon: '🆕', label: 'New Building', desc: 'Under 5 years old' },
+  { id: 'newer', icon: '✨', label: 'Newer Building', desc: '5–15 years old' },
+  { id: 'established', icon: '🏢', label: 'Established Building', desc: '15–30 years old' },
+  { id: 'older', icon: '🏛️', label: 'Older Building', desc: '30+ years old' },
+]
+
 const HOME_TYPES = [
   { id: 'single_family', icon: '🏡', label: 'Single Family' },
   { id: 'condo', icon: '🏢', label: 'Condo / Townhouse' },
   { id: 'multi_family', icon: '🏘️', label: 'Multi-Family' },
+]
+
+const BUILDING_TYPES = [
+  { id: 'leased', icon: '🔑', label: 'Leased Space' },
+  { id: 'owned', icon: '🏢', label: 'Owned Building' },
+  { id: 'multi_unit', icon: '🏬', label: 'Strip Mall / Multi-Unit' },
 ]
 
 const REGIONS = [
@@ -75,18 +102,23 @@ export default function Onboarding() {
   const [step, setStep] = useState(1)
   const [saving, setSaving] = useState(false)
   const [answers, setAnswers] = useState({
+    account_type: '',
     owner_type: '',
+    business_type: '',
+    business_name: '',
     home_age: '',
     home_type: '',
     region: '',
   })
 
+  const isBusiness = answers.account_type === 'business'
   const set = (key, val) => setAnswers((prev) => ({ ...prev, [key]: val }))
 
   const canNext = () => {
-    if (step === 1) return !!answers.owner_type
-    if (step === 2) return !!answers.home_age && !!answers.home_type
-    if (step === 3) return !!answers.region
+    if (step === 1) return !!answers.account_type
+    if (step === 2) return isBusiness ? !!answers.business_type : !!answers.owner_type
+    if (step === 3) return !!answers.home_age && !!answers.home_type
+    if (step === 4) return !!answers.region
     return false
   }
 
@@ -98,7 +130,10 @@ export default function Onboarding() {
     const { error } = await supabase
       .from('profiles')
       .update({
-        owner_type: answers.owner_type,
+        account_type: answers.account_type,
+        owner_type: isBusiness ? null : answers.owner_type,
+        business_type: isBusiness ? answers.business_type : null,
+        business_name: isBusiness ? answers.business_name.trim() || null : null,
         home_age: answers.home_age,
         home_type: answers.home_type,
         region: answers.region,
@@ -108,7 +143,7 @@ export default function Onboarding() {
 
     setSaving(false)
     if (!error) {
-      completeOnboarding()
+      completeOnboarding(answers.account_type)
       navigate('/')
     }
   }
@@ -150,12 +185,32 @@ export default function Onboarding() {
         </div>
       </div>
 
-      {/* Step 1 — Owner type */}
+      {/* Step 1 — Account type */}
       {step === 1 && (
         <>
           <h1 style={{ fontSize: 22, fontWeight: 900, marginBottom: 6 }}>Welcome to HomePulse! 👋</h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginBottom: 24, lineHeight: 1.5 }}>
-            Let's personalize your experience. What best describes you?
+            First, tell us what you're managing.
+          </p>
+          {ACCOUNT_TYPES.map((o) => (
+            <OptionButton
+              key={o.id}
+              selected={answers.account_type === o.id}
+              onClick={() => set('account_type', o.id)}
+              icon={o.icon}
+              label={o.label}
+              desc={o.desc}
+            />
+          ))}
+        </>
+      )}
+
+      {/* Step 2 — Owner/business type */}
+      {step === 2 && !isBusiness && (
+        <>
+          <h1 style={{ fontSize: 22, fontWeight: 900, marginBottom: 6 }}>Let's personalize your experience</h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginBottom: 24, lineHeight: 1.5 }}>
+            What best describes you?
           </p>
           {OWNER_TYPES.map((o) => (
             <OptionButton
@@ -170,17 +225,50 @@ export default function Onboarding() {
         </>
       )}
 
-      {/* Step 2 — Home details */}
-      {step === 2 && (
+      {step === 2 && isBusiness && (
         <>
-          <h1 style={{ fontSize: 22, fontWeight: 900, marginBottom: 6 }}>Tell us about your home</h1>
+          <h1 style={{ fontSize: 22, fontWeight: 900, marginBottom: 6 }}>Tell us about your business</h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginBottom: 20, lineHeight: 1.5 }}>
-            Home age and type help us recommend the right maintenance tasks.
+            This helps us tailor categories and tasks to what your business actually needs.
+          </p>
+          <label className="label">Business name (optional)</label>
+          <input
+            value={answers.business_name}
+            onChange={(e) => set('business_name', e.target.value)}
+            placeholder="e.g. Sunrise Cafe"
+            style={{ marginBottom: 18 }}
+          />
+          <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10 }}>
+            What type of business?
+          </p>
+          {BUSINESS_TYPES.map((o) => (
+            <OptionButton
+              key={o.id}
+              selected={answers.business_type === o.id}
+              onClick={() => set('business_type', o.id)}
+              icon={o.icon}
+              label={o.label}
+              desc={o.desc}
+            />
+          ))}
+        </>
+      )}
+
+      {/* Step 3 — Property details */}
+      {step === 3 && (
+        <>
+          <h1 style={{ fontSize: 22, fontWeight: 900, marginBottom: 6 }}>
+            {isBusiness ? 'Tell us about your building' : 'Tell us about your home'}
+          </h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginBottom: 20, lineHeight: 1.5 }}>
+            {isBusiness
+              ? 'Building age and type help us recommend the right maintenance and compliance tasks.'
+              : 'Home age and type help us recommend the right maintenance tasks.'}
           </p>
           <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10 }}>
-            How old is your home?
+            {isBusiness ? 'How old is your building?' : 'How old is your home?'}
           </p>
-          {HOME_AGES.map((o) => (
+          {(isBusiness ? BUILDING_AGES : HOME_AGES).map((o) => (
             <OptionButton
               key={o.id}
               selected={answers.home_age === o.id}
@@ -191,9 +279,9 @@ export default function Onboarding() {
             />
           ))}
           <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10, marginTop: 6 }}>
-            What type of home?
+            {isBusiness ? 'What type of space?' : 'What type of home?'}
           </p>
-          {HOME_TYPES.map((o) => (
+          {(isBusiness ? BUILDING_TYPES : HOME_TYPES).map((o) => (
             <OptionButton
               key={o.id}
               selected={answers.home_type === o.id}
@@ -205,10 +293,12 @@ export default function Onboarding() {
         </>
       )}
 
-      {/* Step 3 — Region */}
-      {step === 3 && (
+      {/* Step 4 — Region */}
+      {step === 4 && (
         <>
-          <h1 style={{ fontSize: 22, fontWeight: 900, marginBottom: 6 }}>Where is your home?</h1>
+          <h1 style={{ fontSize: 22, fontWeight: 900, marginBottom: 6 }}>
+            {isBusiness ? 'Where is your business?' : 'Where is your home?'}
+          </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginBottom: 24, lineHeight: 1.5 }}>
             Your region determines weather emergency prep guides and seasonal task timing.
           </p>
