@@ -36,6 +36,7 @@ export function AuthProvider({ children }) {
   }, [])
 
   const checkOnboarding = async (userId) => {
+    setCheckingOnboarding(true)
     const cached = localStorage.getItem('homepulse_onboarding_complete')
     if (cached === 'true') {
       setOnboardingComplete(true)
