@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getCategories, getTaskTemplates, REGIONS } from '../constants/categories'
+import { getCategories, getTaskTemplates, isCategoryLocked, REGIONS } from '../constants/categories'
 import { useTasks } from '../hooks/useTasks'
 import { useAuth } from '../hooks/useAuth'
 import Modal from '../components/Modal'
+import UpgradeModal from '../components/UpgradeModal'
 
 const REGION_KEY = 'homepulse_region'
 
@@ -16,7 +17,7 @@ function getTodayPlus(days) {
 export default function Templates() {
   const navigate = useNavigate()
   const { addTask } = useTasks()
-  const { accountType } = useAuth()
+  const { accountType, plan } = useAuth()
   const CATEGORIES = useMemo(() => getCategories(accountType), [accountType])
   const TASK_TEMPLATES = useMemo(() => getTaskTemplates(accountType), [accountType])
   const [region, setRegion] = useState(() => localStorage.getItem(REGION_KEY) || '')
@@ -24,6 +25,7 @@ export default function Templates() {
   const [adding, setAdding] = useState(null)
   const [addedIds, setAddedIds] = useState([])
   const [saving, setSaving] = useState(false)
+  const [upgradeCategory, setUpgradeCategory] = useState(null)
 
   const handleRegionChange = (id) => {
     setRegion(id)
@@ -117,12 +119,17 @@ export default function Templates() {
         {CATEGORIES.map((cat) => {
           const count = getTemplatesForCategory(cat.id).length
           const isWeather = cat.id === 'weather'
-          const locked = isWeather && !region
+          const regionLocked = isWeather && !region
+          const premiumLocked = isCategoryLocked(cat.id, accountType, plan)
+          const locked = regionLocked || premiumLocked
           return (
             <button
               key={cat.id}
               className="card"
-              onClick={() => !locked && setActiveCategory(cat.id)}
+              onClick={() => {
+                if (premiumLocked) setUpgradeCategory(cat)
+                else if (!regionLocked) setActiveCategory(cat.id)
+              }}
               style={{
                 textAlign: 'left',
                 opacity: locked ? 0.5 : 1,
@@ -136,6 +143,9 @@ export default function Templates() {
                 background: `radial-gradient(circle, ${cat.color}25, transparent 70%)`,
                 pointerEvents: 'none',
               }} />
+              {premiumLocked && (
+                <span style={{ position: 'absolute', top: 10, right: 10, fontSize: 14 }}>🔒</span>
+              )}
               <div style={{
                 width: 36, height: 36, borderRadius: 10,
                 background: `${cat.color}22`,
@@ -146,7 +156,7 @@ export default function Templates() {
               </div>
               <p style={{ fontWeight: 700, fontSize: 13 }}>{cat.name}</p>
               <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
-                {locked ? 'Select region first' : `${count} tasks`}
+                {premiumLocked ? 'Premium' : regionLocked ? 'Select region first' : `${count} tasks`}
               </p>
             </button>
           )
@@ -241,6 +251,12 @@ export default function Templates() {
           </button>
         )}
       </Modal>
+
+      <UpgradeModal
+        open={!!upgradeCategory}
+        onClose={() => setUpgradeCategory(null)}
+        categoryName={upgradeCategory?.name}
+      />
     </div>
   )
 }

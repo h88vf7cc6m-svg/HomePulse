@@ -9,6 +9,7 @@ export function AuthProvider({ children }) {
   const [onboardingComplete, setOnboardingComplete] = useState(false)
   const [checkingOnboarding, setCheckingOnboarding] = useState(true)
   const [accountType, setAccountType] = useState(() => localStorage.getItem('homepulse_account_type') || null)
+  const [plan, setPlan] = useState(() => localStorage.getItem('homepulse_plan') || 'free')
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -43,7 +44,7 @@ export function AuthProvider({ children }) {
     }
     const { data } = await supabase
       .from('profiles')
-      .select('onboarding_complete, account_type')
+      .select('onboarding_complete, account_type, plan')
       .eq('user_id', userId)
       .maybeSingle()
     const complete = !!data?.onboarding_complete
@@ -52,6 +53,10 @@ export function AuthProvider({ children }) {
       if (data?.account_type) {
         localStorage.setItem('homepulse_account_type', data.account_type)
         setAccountType(data.account_type)
+      }
+      if (data?.plan) {
+        localStorage.setItem('homepulse_plan', data.plan)
+        setPlan(data.plan)
       }
     }
     setOnboardingComplete(complete)
@@ -71,8 +76,10 @@ export function AuthProvider({ children }) {
   const signOut = async () => {
     localStorage.removeItem('homepulse_onboarding_complete')
     localStorage.removeItem('homepulse_account_type')
+    localStorage.removeItem('homepulse_plan')
     setOnboardingComplete(false)
     setAccountType(null)
+    setPlan('free')
     await supabase.auth.signOut()
   }
 
@@ -105,6 +112,7 @@ export function AuthProvider({ children }) {
       onboardingComplete,
       checkingOnboarding,
       accountType,
+      plan,
       signIn,
       signUp,
       signOut,

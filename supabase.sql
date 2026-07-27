@@ -174,3 +174,10 @@ CREATE POLICY "documents_storage_insert_own" ON storage.objects
 DROP POLICY IF EXISTS "documents_storage_delete_own" ON storage.objects;
 CREATE POLICY "documents_storage_delete_own" ON storage.objects
   FOR DELETE USING (bucket_id = 'documents' AND auth.uid()::text = (storage.foldername(name))[1]);
+
+-- ============================================================
+-- Migration: freemium plan (UI-only gating for now — no billing
+-- provider wired up yet, so every account defaults to 'free').
+-- ============================================================
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS plan text DEFAULT 'free'
+  CHECK (plan IN ('free', 'paid'));

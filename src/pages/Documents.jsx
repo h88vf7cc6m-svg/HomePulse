@@ -5,24 +5,35 @@ import { useAuth } from '../hooks/useAuth'
 import DocumentCard from '../components/DocumentCard'
 import CategoryChip from '../components/CategoryChip'
 import Modal from '../components/Modal'
-import { getCategories } from '../constants/categories'
+import UpgradeModal from '../components/UpgradeModal'
+import { getCategories, getCategory, isCategoryLocked } from '../constants/categories'
 
 export default function Documents() {
   const { documents, loading, error, uploadDocument, getDownloadUrl, deleteDocument } = useDocuments()
-  const { accountType } = useAuth()
+  const { accountType, plan } = useAuth()
   const CATEGORIES = useMemo(() => getCategories(accountType), [accountType])
+  const unlockedCategories = useMemo(
+    () => CATEGORIES.filter((c) => !isCategoryLocked(c.id, accountType, plan)),
+    [CATEGORIES, accountType, plan]
+  )
   const [searchParams, setSearchParams] = useSearchParams()
   const activeCategory = searchParams.get('category') || 'all'
+  const activeCategoryLocked =
+    activeCategory !== 'all' && isCategoryLocked(activeCategory, accountType, plan)
   const [modalOpen, setModalOpen] = useState(false)
-  const [uploadCategory, setUploadCategory] = useState(CATEGORIES[0]?.id || '')
+  const [uploadCategory, setUploadCategory] = useState(unlockedCategories[0]?.id || '')
   const [title, setTitle] = useState('')
   const [file, setFile] = useState(null)
   const [formError, setFormError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [upgradeCategory, setUpgradeCategory] = useState(null)
 
   const setCategory = (id) => {
     if (id === 'all') {
       searchParams.delete('category')
+    } else if (isCategoryLocked(id, accountType, plan)) {
+      setUpgradeCategory(getCategory(id))
+      return
     } else {
       searchParams.set('category', id)
     }
@@ -34,7 +45,8 @@ export default function Documents() {
   }, [documents, activeCategory])
 
   const openUpload = () => {
-    setUploadCategory(activeCategory !== 'all' ? activeCategory : CATEGORIES[0]?.id || '')
+    const preselect = activeCategory !== 'all' && !activeCategoryLocked ? activeCategory : unlockedCategories[0]?.id || ''
+    setUploadCategory(preselect)
     setTitle('')
     setFile(null)
     setFormError('')
@@ -78,20 +90,33 @@ export default function Documents() {
 
       <div style={{ display: 'flex', gap: 8, overflowX: 'auto', marginBottom: 18, paddingBottom: 4 }}>
         <CategoryChip label="All" active={activeCategory === 'all'} onClick={() => setCategory('all')} />
-        {CATEGORIES.map((cat) => (
-          <CategoryChip
-            key={cat.id}
-            label={cat.name}
-            icon={cat.icon}
-            active={activeCategory === cat.id}
-            onClick={() => setCategory(cat.id)}
-          />
-        ))}
+        {CATEGORIES.map((cat) => {
+          const locked = isCategoryLocked(cat.id, accountType, plan)
+          return (
+            <CategoryChip
+              key={cat.id}
+              label={locked ? `🔒 ${cat.name}` : cat.name}
+              icon={locked ? null : cat.icon}
+              active={activeCategory === cat.id}
+              onClick={() => setCategory(cat.id)}
+            />
+          )
+        })}
       </div>
 
       {error && <p className="error-text" style={{ marginBottom: 14 }}>{error}</p>}
 
-      {loading ? (
+      {activeCategoryLocked ? (
+        <div className="card" style={{ textAlign: 'center', padding: '24px 16px' }}>
+          <p style={{ fontSize: 28, marginBottom: 8 }}>🔒</p>
+          <p style={{ fontWeight: 700, fontSize: 14, marginBottom: 6 }}>
+            {getCategory(activeCategory).name} is a premium category
+          </p>
+          <button className="btn-secondary" onClick={() => setUpgradeCategory(getCategory(activeCategory))}>
+            Learn More
+          </button>
+        </div>
+      ) : loading ? (
         <p style={{ color: 'var(--text-secondary)' }}>Loading documents...</p>
       ) : filteredDocs.length === 0 ? (
         <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>No documents in this category yet.</p>
@@ -113,7 +138,7 @@ export default function Documents() {
               value={uploadCategory}
               onChange={(e) => setUploadCategory(e.target.value)}
             >
-              {CATEGORIES.map((cat) => (
+              {unlockedCategories.map((cat) => (
                 <option key={cat.id} value={cat.id}>
                   {cat.icon} {cat.name}
                 </option>
@@ -150,6 +175,12 @@ export default function Documents() {
           </button>
         </form>
       </Modal>
+
+      <UpgradeModal
+        open={!!upgradeCategory}
+        onClose={() => setUpgradeCategory(null)}
+        categoryName={upgradeCategory?.name}
+      />
     </div>
   )
 }

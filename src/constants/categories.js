@@ -42,6 +42,21 @@ export const getCategories = (accountType) =>
 export const getCategory = (id) =>
   [...CATEGORIES, ...BUSINESS_ONLY_CATEGORIES].find((c) => c.id === id) || CATEGORIES[0]
 
+// Freemium: categories available on the free plan. Everything else
+// requires an upgrade. Paid accounts (plan === 'paid') get everything.
+const FREE_CATEGORY_IDS = {
+  homeowner: ['hvac', 'safety'],
+  business: ['hvac', 'fire_safety'],
+}
+
+export const getFreeCategoryIds = (accountType) =>
+  FREE_CATEGORY_IDS[accountType === 'business' ? 'business' : 'homeowner']
+
+export const isCategoryLocked = (categoryId, accountType, plan) => {
+  if (plan === 'paid') return false
+  return !getFreeCategoryIds(accountType).includes(categoryId)
+}
+
 export const FREQUENCIES = ['Monthly', 'Quarterly', 'Seasonal', 'Annual', 'One-time']
 
 export const REGIONS = [

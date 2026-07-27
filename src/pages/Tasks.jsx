@@ -5,7 +5,8 @@ import { useAuth } from '../hooks/useAuth'
 import TaskCard from '../components/TaskCard'
 import CategoryChip from '../components/CategoryChip'
 import Modal from '../components/Modal'
-import { getCategories, FREQUENCIES } from '../constants/categories'
+import UpgradeModal from '../components/UpgradeModal'
+import { getCategories, getCategory, isCategoryLocked, FREQUENCIES } from '../constants/categories'
 
 const makeEmptyForm = (categories) => ({
   title: '',
@@ -18,18 +19,28 @@ const makeEmptyForm = (categories) => ({
 
 export default function Tasks() {
   const { tasks, loading, error, addTask, toggleComplete, deleteTask } = useTasks()
-  const { accountType } = useAuth()
+  const { accountType, plan } = useAuth()
   const CATEGORIES = useMemo(() => getCategories(accountType), [accountType])
+  const unlockedCategories = useMemo(
+    () => CATEGORIES.filter((c) => !isCategoryLocked(c.id, accountType, plan)),
+    [CATEGORIES, accountType, plan]
+  )
   const [searchParams, setSearchParams] = useSearchParams()
   const activeCategory = searchParams.get('category') || 'all'
+  const activeCategoryLocked =
+    activeCategory !== 'all' && isCategoryLocked(activeCategory, accountType, plan)
   const [modalOpen, setModalOpen] = useState(false)
-  const [form, setForm] = useState(() => makeEmptyForm(CATEGORIES))
+  const [form, setForm] = useState(() => makeEmptyForm(unlockedCategories))
   const [formErrors, setFormErrors] = useState({})
   const [submitting, setSubmitting] = useState(false)
+  const [upgradeCategory, setUpgradeCategory] = useState(null)
 
   const setCategory = (id) => {
     if (id === 'all') {
       searchParams.delete('category')
+    } else if (isCategoryLocked(id, accountType, plan)) {
+      setUpgradeCategory(getCategory(id))
+      return
     } else {
       searchParams.set('category', id)
     }
@@ -75,7 +86,7 @@ export default function Tasks() {
       return
     }
 
-    setForm(makeEmptyForm(CATEGORIES))
+    setForm(makeEmptyForm(unlockedCategories))
     setFormErrors({})
     setModalOpen(false)
   }
@@ -86,20 +97,33 @@ export default function Tasks() {
 
       <div style={{ display: 'flex', gap: 8, overflowX: 'auto', marginBottom: 18, paddingBottom: 4 }}>
         <CategoryChip label="All" active={activeCategory === 'all'} onClick={() => setCategory('all')} />
-        {CATEGORIES.map((cat) => (
-          <CategoryChip
-            key={cat.id}
-            label={cat.name}
-            icon={cat.icon}
-            active={activeCategory === cat.id}
-            onClick={() => setCategory(cat.id)}
-          />
-        ))}
+        {CATEGORIES.map((cat) => {
+          const locked = isCategoryLocked(cat.id, accountType, plan)
+          return (
+            <CategoryChip
+              key={cat.id}
+              label={locked ? `🔒 ${cat.name}` : cat.name}
+              icon={locked ? null : cat.icon}
+              active={activeCategory === cat.id}
+              onClick={() => setCategory(cat.id)}
+            />
+          )
+        })}
       </div>
 
       {error && <p className="error-text" style={{ marginBottom: 14 }}>{error}</p>}
 
-      {loading ? (
+      {activeCategoryLocked ? (
+        <div className="card" style={{ textAlign: 'center', padding: '24px 16px' }}>
+          <p style={{ fontSize: 28, marginBottom: 8 }}>🔒</p>
+          <p style={{ fontWeight: 700, fontSize: 14, marginBottom: 6 }}>
+            {getCategory(activeCategory).name} is a premium category
+          </p>
+          <button className="btn-secondary" onClick={() => setUpgradeCategory(getCategory(activeCategory))}>
+            Learn More
+          </button>
+        </div>
+      ) : loading ? (
         <p style={{ color: 'var(--text-secondary)' }}>Loading tasks...</p>
       ) : filteredTasks.length === 0 ? (
         <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>No tasks in this category yet.</p>
@@ -111,7 +135,7 @@ export default function Tasks() {
 
       <button
         onClick={() => {
-          setForm(makeEmptyForm(CATEGORIES))
+          setForm(makeEmptyForm(unlockedCategories))
           setModalOpen(true)
         }}
         className="fab"
@@ -137,7 +161,7 @@ export default function Tasks() {
               value={form.category}
               onChange={(e) => setForm({ ...form, category: e.target.value })}
             >
-              {CATEGORIES.map((cat) => (
+              {unlockedCategories.map((cat) => (
                 <option key={cat.id} value={cat.id}>
                   {cat.icon} {cat.name}
                 </option>
@@ -195,6 +219,12 @@ export default function Tasks() {
           </button>
         </form>
       </Modal>
+
+      <UpgradeModal
+        open={!!upgradeCategory}
+        onClose={() => setUpgradeCategory(null)}
+        categoryName={upgradeCategory?.name}
+      />
     </div>
   )
 }
