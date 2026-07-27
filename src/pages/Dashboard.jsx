@@ -1,16 +1,22 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTasks } from '../hooks/useTasks'
+import { useAuth } from '../hooks/useAuth'
 import StatCard from '../components/StatCard'
 import HealthBar from '../components/HealthBar'
 import TaskCard from '../components/TaskCard'
 import PulseWave from '../components/PulseWave'
-import { CATEGORIES } from '../constants/categories'
+import UpgradeModal from '../components/UpgradeModal'
+import { getCategories, isCategoryLocked } from '../constants/categories'
 import logo from '../assets/logo.png'
 
 export default function Dashboard() {
   const { tasks, loading, error, toggleComplete } = useTasks()
+  const { accountType, plan } = useAuth()
   const navigate = useNavigate()
+  const isBusiness = accountType === 'business'
+  const CATEGORIES = useMemo(() => getCategories(accountType), [accountType])
+  const [upgradeCategory, setUpgradeCategory] = useState(null)
 
   const stats = useMemo(() => {
     const today = new Date()
@@ -35,7 +41,7 @@ export default function Dashboard() {
       if (!t.completed && map[t.category] !== undefined) map[t.category] += 1
     })
     return map
-  }, [tasks])
+  }, [tasks, CATEGORIES])
 
   if (loading) {
     return (
@@ -57,7 +63,7 @@ export default function Dashboard() {
           <h1 className="app-name gradient-text">HomePulse</h1>
         </div>
         <div className="app-tagline">
-          <PulseWave /> &nbsp;Home Health Dashboard
+          <PulseWave /> &nbsp;{isBusiness ? 'Business Health Dashboard' : 'Home Health Dashboard'}
         </div>
         <div className="stats-row">
           <StatCard label="Overdue" value={stats.overdue.length} color="var(--danger)" />
@@ -71,7 +77,7 @@ export default function Dashboard() {
       {error && <p className="error-text" style={{ marginBottom: 14 }}>{error}</p>}
 
       <div style={{ marginBottom: 16 }}>
-        <HealthBar score={stats.health} />
+        <HealthBar score={stats.health} isBusiness={isBusiness} />
       </div>
 
       {stats.overdue.length > 0 && (
@@ -106,37 +112,51 @@ export default function Dashboard() {
       <div>
         <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 12 }}>Categories</h2>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-          {CATEGORIES.map((cat) => (
-            <button
-              key={cat.id}
-              className="card"
-              onClick={() => navigate(`/tasks?category=${cat.id}`)}
-              style={{ textAlign: 'left' }}
-            >
-              <div
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 10,
-                  background: `${cat.color}22`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 18,
-                  marginBottom: 10,
-                }}
+          {CATEGORIES.map((cat) => {
+            const locked = isCategoryLocked(cat.id, accountType, plan)
+            return (
+              <button
+                key={cat.id}
+                className="card"
+                onClick={() =>
+                  locked ? setUpgradeCategory(cat) : navigate(`/tasks?category=${cat.id}`)
+                }
+                style={{ textAlign: 'left', opacity: locked ? 0.5 : 1, position: 'relative' }}
               >
-                {cat.icon}
-              </div>
-              <p style={{ fontWeight: 700, fontSize: 14 }}>{cat.name}</p>
-              <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>
-                {categoryCounts[cat.id]} pending
-              </p>
-            </button>
-          ))}
+                {locked && (
+                  <span style={{ position: 'absolute', top: 10, right: 10, fontSize: 14 }}>🔒</span>
+                )}
+                <div
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 10,
+                    background: `${cat.color}22`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 18,
+                    marginBottom: 10,
+                  }}
+                >
+                  {cat.icon}
+                </div>
+                <p style={{ fontWeight: 700, fontSize: 14 }}>{cat.name}</p>
+                <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>
+                  {locked ? 'Premium' : `${categoryCounts[cat.id]} pending`}
+                </p>
+              </button>
+            )
+          })}
         </div>
       </div>
       </div>
+
+      <UpgradeModal
+        open={!!upgradeCategory}
+        onClose={() => setUpgradeCategory(null)}
+        categoryName={upgradeCategory?.name}
+      />
     </>
   )
 }

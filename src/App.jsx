@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard'
 import Tasks from './pages/Tasks'
 import Templates from './pages/Templates'
 import Vendors from './pages/Vendors'
+import Documents from './pages/Documents'
 import Settings from './pages/Settings'
 import ProtectedRoute from './components/ProtectedRoute'
 import BottomNav from './components/BottomNav'
@@ -70,6 +71,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <Vendors />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/documents"
+            element={
+              <ProtectedRoute>
+                <Documents />
               </ProtectedRoute>
             }
           />

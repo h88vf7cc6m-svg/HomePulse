@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-export default function HealthBar({ score }) {
+export default function HealthBar({ score, isBusiness }) {
   const [width, setWidth] = useState(0)
 
   useEffect(() => {
@@ -12,7 +12,7 @@ export default function HealthBar({ score }) {
     <div className="card">
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
         <span style={{ color: 'var(--text-primary)', fontSize: 13, fontWeight: 700 }}>
-          🏠 Home Health Score
+          {isBusiness ? '💼 Business Health Score' : '🏠 Home Health Score'}
         </span>
         <span style={{ color: 'var(--teal)', fontSize: 14, fontWeight: 900 }}>{score}%</span>
       </div>

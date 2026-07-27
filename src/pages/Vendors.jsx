@@ -1,22 +1,25 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useVendors } from '../hooks/useVendors'
+import { useAuth } from '../hooks/useAuth'
 import VendorCard from '../components/VendorCard'
 import Modal from '../components/Modal'
-import { CATEGORIES } from '../constants/categories'
+import { getCategories } from '../constants/categories'
 
-const emptyForm = {
+const makeEmptyForm = (categories) => ({
   name: '',
-  category: CATEGORIES[0].id,
+  category: categories[0]?.id || '',
   phone: '',
   email: '',
   rating: 5,
   notes: '',
-}
+})
 
 export default function Vendors() {
   const { vendors, loading, error, addVendor, deleteVendor } = useVendors()
+  const { accountType } = useAuth()
+  const CATEGORIES = useMemo(() => getCategories(accountType), [accountType])
   const [modalOpen, setModalOpen] = useState(false)
-  const [form, setForm] = useState(emptyForm)
+  const [form, setForm] = useState(() => makeEmptyForm(CATEGORIES))
   const [formErrors, setFormErrors] = useState({})
   const [submitting, setSubmitting] = useState(false)
 
@@ -47,7 +50,7 @@ export default function Vendors() {
       return
     }
 
-    setForm(emptyForm)
+    setForm(makeEmptyForm(CATEGORIES))
     setFormErrors({})
     setModalOpen(false)
   }
@@ -59,7 +62,10 @@ export default function Vendors() {
       </div>
 
       <button
-        onClick={() => setModalOpen(true)}
+        onClick={() => {
+          setForm(makeEmptyForm(CATEGORIES))
+          setModalOpen(true)
+        }}
         className="btn-primary"
         style={{ marginBottom: 20 }}
       >

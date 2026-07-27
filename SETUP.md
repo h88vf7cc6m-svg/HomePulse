@@ -24,8 +24,12 @@ You can find these under Supabase → Project Settings → API.
 Open the Supabase dashboard → **SQL Editor** → paste the contents of
 [`supabase.sql`](./supabase.sql) → click **Run**.
 
-This creates the `profiles`, `tasks`, and `vendors` tables along with
-Row Level Security policies that scope every row to `auth.uid()`.
+This creates the `profiles`, `tasks`, `vendors`, and `documents` tables
+along with Row Level Security policies that scope every row to
+`auth.uid()`, plus a private `documents` storage bucket for uploaded
+files. The script is idempotent — safe to re-run against an existing
+project if you're picking up new columns/tables from a later version
+(e.g. the `account_type` / business fields and the documents feature).
 
 ## 4. Enable email authentication
 

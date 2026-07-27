@@ -24,9 +24,10 @@ function Toggle({ checked, onChange }) {
 }
 
 export default function Settings() {
-  const { user, signOut } = useAuth()
+  const { user, accountType, signOut } = useAuth()
+  const isBusiness = accountType === 'business'
   const [notifs, setNotifs] = useState(defaultNotifs)
-  const [profile, setProfile] = useState({ address: '', year_built: '', sq_footage: '' })
+  const [profile, setProfile] = useState({ address: '', year_built: '', sq_footage: '', business_name: '' })
   const [editing, setEditing] = useState(false)
   const [loadingProfile, setLoadingProfile] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -52,6 +53,7 @@ export default function Settings() {
           address: data.address || '',
           year_built: data.year_built || '',
           sq_footage: data.sq_footage || '',
+          business_name: data.business_name || '',
         })
       }
       setLoadingProfile(false)
@@ -74,6 +76,7 @@ export default function Settings() {
         address: profile.address || null,
         year_built: profile.year_built ? parseInt(profile.year_built, 10) : null,
         sq_footage: profile.sq_footage ? parseInt(profile.sq_footage, 10) : null,
+        ...(isBusiness ? { business_name: profile.business_name.trim() || null } : {}),
       })
       .eq('user_id', user.id)
 
@@ -110,7 +113,7 @@ export default function Settings() {
 
       <div className="card" style={{ marginBottom: 20 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-          <h2 style={{ fontSize: 15, fontWeight: 700 }}>Home Profile</h2>
+          <h2 style={{ fontSize: 15, fontWeight: 700 }}>{isBusiness ? 'Business Profile' : 'Home Profile'}</h2>
           {!editing && (
             <button onClick={() => setEditing(true)} style={{ fontSize: 13, color: 'var(--teal-light)', fontWeight: 600 }}>
               Edit
@@ -122,6 +125,16 @@ export default function Settings() {
           <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>Loading profile...</p>
         ) : editing ? (
           <>
+            {isBusiness && (
+              <div style={{ marginBottom: 12 }}>
+                <label className="label">Business Name</label>
+                <input
+                  value={profile.business_name}
+                  onChange={(e) => setProfile({ ...profile, business_name: e.target.value })}
+                  placeholder="e.g. Sunrise Cafe"
+                />
+              </div>
+            )}
             <div style={{ marginBottom: 12 }}>
               <label className="label">Address</label>
               <input
@@ -131,7 +144,7 @@ export default function Settings() {
               />
             </div>
             <div style={{ marginBottom: 12 }}>
-              <label className="label">Year Built</label>
+              <label className="label">{isBusiness ? 'Year Established' : 'Year Built'}</label>
               <input
                 type="number"
                 value={profile.year_built}
@@ -155,11 +168,16 @@ export default function Settings() {
           </>
         ) : (
           <>
+            {isBusiness && (
+              <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 6 }}>
+                Business Name: {profile.business_name || '—'}
+              </p>
+            )}
             <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 6 }}>
               Address: {profile.address || '—'}
             </p>
             <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 6 }}>
-              Year Built: {profile.year_built || '—'}
+              {isBusiness ? 'Year Established' : 'Year Built'}: {profile.year_built || '—'}
             </p>
             <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
               Square Footage: {profile.sq_footage || '—'}
@@ -182,7 +200,7 @@ export default function Settings() {
         <p style={{ fontWeight: 700, fontSize: 14 }}>HomePulse</p>
         <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>Version 1.0.0</p>
         <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 8 }}>
-          Keep your home running smoothly.
+          {isBusiness ? 'Keep your business running smoothly.' : 'Keep your home running smoothly.'}
         </p>
         <div style={{ display: 'flex', gap: 16, marginTop: 12, justifyContent: 'center' }}>
           <a href="/privacy" style={{ fontSize: 12, color: 'var(--teal)' }}>Privacy Policy</a>

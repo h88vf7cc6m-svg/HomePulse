@@ -8,6 +8,8 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
   const [onboardingComplete, setOnboardingComplete] = useState(false)
   const [checkingOnboarding, setCheckingOnboarding] = useState(true)
+  const [accountType, setAccountType] = useState(() => localStorage.getItem('homepulse_account_type') || null)
+  const [plan, setPlan] = useState(() => localStorage.getItem('homepulse_plan') || 'free')
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -42,11 +44,21 @@ export function AuthProvider({ children }) {
     }
     const { data } = await supabase
       .from('profiles')
-      .select('onboarding_complete')
+      .select('onboarding_complete, account_type, plan')
       .eq('user_id', userId)
       .maybeSingle()
     const complete = !!data?.onboarding_complete
-    if (complete) localStorage.setItem('homepulse_onboarding_complete', 'true')
+    if (complete) {
+      localStorage.setItem('homepulse_onboarding_complete', 'true')
+      if (data?.account_type) {
+        localStorage.setItem('homepulse_account_type', data.account_type)
+        setAccountType(data.account_type)
+      }
+      if (data?.plan) {
+        localStorage.setItem('homepulse_plan', data.plan)
+        setPlan(data.plan)
+      }
+    }
     setOnboardingComplete(complete)
     setCheckingOnboarding(false)
   }
@@ -63,7 +75,11 @@ export function AuthProvider({ children }) {
 
   const signOut = async () => {
     localStorage.removeItem('homepulse_onboarding_complete')
+    localStorage.removeItem('homepulse_account_type')
+    localStorage.removeItem('homepulse_plan')
     setOnboardingComplete(false)
+    setAccountType(null)
+    setPlan('free')
     await supabase.auth.signOut()
   }
 
@@ -79,8 +95,12 @@ export function AuthProvider({ children }) {
     return { error }
   }
 
-  const completeOnboarding = () => {
+  const completeOnboarding = (type) => {
     localStorage.setItem('homepulse_onboarding_complete', 'true')
+    if (type) {
+      localStorage.setItem('homepulse_account_type', type)
+      setAccountType(type)
+    }
     setOnboardingComplete(true)
   }
 
@@ -91,6 +111,8 @@ export function AuthProvider({ children }) {
       loading,
       onboardingComplete,
       checkingOnboarding,
+      accountType,
+      plan,
       signIn,
       signUp,
       signOut,
