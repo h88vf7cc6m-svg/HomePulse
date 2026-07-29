@@ -8,8 +8,8 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
   const [onboardingComplete, setOnboardingComplete] = useState(false)
   const [checkingOnboarding, setCheckingOnboarding] = useState(true)
-  const [accountType, setAccountType] = useState(() => localStorage.getItem('homepulse_account_type') || null)
-  const [plan, setPlan] = useState(() => localStorage.getItem('homepulse_plan') || 'free')
+  const [accountType, setAccountType] = useState(null)
+  const [plan, setPlan] = useState('free')
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -28,6 +28,8 @@ export function AuthProvider({ children }) {
         checkOnboarding(newSession.user.id)
       } else {
         setOnboardingComplete(false)
+        setAccountType(null)
+        setPlan('free')
         setCheckingOnboarding(false)
       }
     })
@@ -35,32 +37,19 @@ export function AuthProvider({ children }) {
     return () => listener.subscription.unsubscribe()
   }, [])
 
+  // Always asks the database — never trust a cached flag, since a single
+  // browser/device can be used by more than one account (a cached flag
+  // isn't scoped to a user and would leak one account's status to another).
   const checkOnboarding = async (userId) => {
     setCheckingOnboarding(true)
-    const cached = localStorage.getItem('homepulse_onboarding_complete')
-    if (cached === 'true') {
-      setOnboardingComplete(true)
-      setCheckingOnboarding(false)
-      return
-    }
     const { data } = await supabase
       .from('profiles')
       .select('onboarding_complete, account_type, plan')
       .eq('user_id', userId)
       .maybeSingle()
-    const complete = !!data?.onboarding_complete
-    if (complete) {
-      localStorage.setItem('homepulse_onboarding_complete', 'true')
-      if (data?.account_type) {
-        localStorage.setItem('homepulse_account_type', data.account_type)
-        setAccountType(data.account_type)
-      }
-      if (data?.plan) {
-        localStorage.setItem('homepulse_plan', data.plan)
-        setPlan(data.plan)
-      }
-    }
-    setOnboardingComplete(complete)
+    setOnboardingComplete(!!data?.onboarding_complete)
+    setAccountType(data?.account_type || null)
+    setPlan(data?.plan || 'free')
     setCheckingOnboarding(false)
   }
 
@@ -75,9 +64,6 @@ export function AuthProvider({ children }) {
   }
 
   const signOut = async () => {
-    localStorage.removeItem('homepulse_onboarding_complete')
-    localStorage.removeItem('homepulse_account_type')
-    localStorage.removeItem('homepulse_plan')
     setOnboardingComplete(false)
     setAccountType(null)
     setPlan('free')
@@ -97,11 +83,7 @@ export function AuthProvider({ children }) {
   }
 
   const completeOnboarding = (type) => {
-    localStorage.setItem('homepulse_onboarding_complete', 'true')
-    if (type) {
-      localStorage.setItem('homepulse_account_type', type)
-      setAccountType(type)
-    }
+    if (type) setAccountType(type)
     setOnboardingComplete(true)
   }
 
