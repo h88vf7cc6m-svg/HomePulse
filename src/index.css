@@ -211,8 +211,8 @@ a {
 
 .fab {
   position: fixed;
-  bottom: 86px;
-  right: calc(50% - 215px + 14px);
+  bottom: calc(86px + env(safe-area-inset-bottom));
+  right: max(14px, calc(50% - 215px + 14px));
   background: linear-gradient(135deg, var(--grad-start), var(--grad-end));
   color: #fff;
   border: none;
@@ -330,7 +330,7 @@ a {
 }
 
 .page {
-  padding: 20px 16px 100px;
+  padding: calc(20px + env(safe-area-inset-top)) 16px calc(100px + env(safe-area-inset-bottom));
   min-height: 100vh;
 }
 

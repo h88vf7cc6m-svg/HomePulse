@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
+import Modal from '../components/Modal'
 import logo from '../assets/logo.png'
 
 const NOTIF_KEY = 'homepulse_notifications'
@@ -24,7 +25,7 @@ function Toggle({ checked, onChange }) {
 }
 
 export default function Settings() {
-  const { user, accountType, signOut } = useAuth()
+  const { user, accountType, plan, signOut, deleteAccount } = useAuth()
   const isBusiness = accountType === 'business'
   const [notifs, setNotifs] = useState(defaultNotifs)
   const [profile, setProfile] = useState({ address: '', year_built: '', sq_footage: '', business_name: '' })
@@ -32,6 +33,10 @@ export default function Settings() {
   const [loadingProfile, setLoadingProfile] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleteConfirm, setDeleteConfirm] = useState('')
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState(null)
 
   useEffect(() => {
     const stored = localStorage.getItem(NOTIF_KEY)
@@ -86,6 +91,21 @@ export default function Settings() {
       return
     }
     setEditing(false)
+  }
+
+  const closeDelete = () => {
+    if (deleting) return
+    setDeleteOpen(false)
+    setDeleteConfirm('')
+    setDeleteError(null)
+  }
+
+  const handleDeleteAccount = async () => {
+    setDeleting(true)
+    setDeleteError(null)
+    const { error: delError } = await deleteAccount()
+    setDeleting(false)
+    if (delError) setDeleteError(delError.message)
   }
 
   return (
@@ -215,6 +235,42 @@ export default function Settings() {
       >
         Sign Out
       </button>
+
+      <button
+        onClick={() => setDeleteOpen(true)}
+        style={{ display: 'block', margin: '20px auto 0', fontSize: 13, color: 'var(--danger)', fontWeight: 600 }}
+      >
+        Delete Account
+      </button>
+
+      <Modal open={deleteOpen} onClose={closeDelete} title="Delete Account">
+        <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 12 }}>
+          This permanently deletes your account, tasks, vendors, and uploaded documents. This can't be undone.
+        </p>
+        {plan === 'paid' && (
+          <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 12 }}>
+            Deleting your account doesn't cancel your subscription. Cancel it from your Stripe receipt email so you aren't charged again.
+          </p>
+        )}
+        <label className="label">Type DELETE to confirm</label>
+        <input
+          value={deleteConfirm}
+          onChange={(e) => setDeleteConfirm(e.target.value)}
+          placeholder="DELETE"
+          autoCapitalize="characters"
+          autoCorrect="off"
+          style={{ marginBottom: 16 }}
+        />
+        {deleteError && <p className="error-text" style={{ marginBottom: 12 }}>{deleteError}</p>}
+        <button
+          className="btn-primary"
+          onClick={handleDeleteAccount}
+          disabled={deleteConfirm.trim().toUpperCase() !== 'DELETE' || deleting}
+          style={{ background: 'var(--danger)' }}
+        >
+          {deleting ? 'Deleting...' : 'Permanently Delete Account'}
+        </button>
+      </Modal>
     </div>
   )
 }

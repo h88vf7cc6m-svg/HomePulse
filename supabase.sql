@@ -181,3 +181,26 @@ CREATE POLICY "documents_storage_delete_own" ON storage.objects
 -- ============================================================
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS plan text DEFAULT 'free'
   CHECK (plan IN ('free', 'paid'));
+
+-- ============================================================
+-- Migration: in-app account deletion (required by the App Store).
+-- Deletes the signed-in user from auth.users; profiles, tasks,
+-- vendors and documents rows go with it via ON DELETE CASCADE.
+-- Uploaded files are removed by the app before this is called.
+-- ============================================================
+CREATE OR REPLACE FUNCTION public.delete_own_account()
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'Not authenticated';
+  END IF;
+  DELETE FROM auth.users WHERE id = auth.uid();
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.delete_own_account() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.delete_own_account() TO authenticated;

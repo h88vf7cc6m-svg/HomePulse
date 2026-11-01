@@ -70,6 +70,36 @@ export function AuthProvider({ children }) {
     await supabase.auth.signOut()
   }
 
+  const deleteAccount = async () => {
+    const userId = session?.user?.id
+    if (!userId) return { error: new Error('Not signed in') }
+
+    // Uploaded files live at `${userId}/${category}/${filename}`. Storage
+    // doesn't cascade from auth.users, so remove them before the account.
+    const { data: folders, error: listError } = await supabase.storage.from('documents').list(userId)
+    if (listError) return { error: listError }
+    for (const folder of folders || []) {
+      const prefix = `${userId}/${folder.name}`
+      const { data: files, error: filesError } = await supabase.storage.from('documents').list(prefix, { limit: 1000 })
+      if (filesError) return { error: filesError }
+      const paths = (files || []).map((f) => `${prefix}/${f.name}`)
+      if (paths.length) {
+        const { error: removeError } = await supabase.storage.from('documents').remove(paths)
+        if (removeError) return { error: removeError }
+      }
+    }
+
+    const { error } = await supabase.rpc('delete_own_account')
+    if (error) return { error }
+
+    setOnboardingComplete(false)
+    setAccountType(null)
+    setPlan('free')
+    // The user no longer exists server-side, so only clear the local session.
+    await supabase.auth.signOut({ scope: 'local' })
+    return { error: null }
+  }
+
   const requestPasswordReset = async (email) => {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`,
@@ -99,6 +129,7 @@ export function AuthProvider({ children }) {
       signIn,
       signUp,
       signOut,
+      deleteAccount,
       requestPasswordReset,
       updatePassword,
       completeOnboarding,
