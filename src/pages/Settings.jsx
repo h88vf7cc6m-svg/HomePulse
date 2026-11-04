@@ -4,30 +4,9 @@ import { supabase } from '../lib/supabase'
 import Modal from '../components/Modal'
 import logo from '../assets/logo.png'
 
-const NOTIF_KEY = 'homepulse_notifications'
-
-const defaultNotifs = {
-  push: true,
-  weeklySummary: true,
-  overdueAlerts: true,
-}
-
-function Toggle({ checked, onChange }) {
-  return (
-    <button
-      onClick={() => onChange(!checked)}
-      className={`toggle-switch ${checked ? 'on' : ''}`}
-      style={{ flexShrink: 0 }}
-    >
-      <span className="toggle-thumb" />
-    </button>
-  )
-}
-
 export default function Settings() {
   const { user, accountType, plan, signOut, deleteAccount } = useAuth()
   const isBusiness = accountType === 'business'
-  const [notifs, setNotifs] = useState(defaultNotifs)
   const [profile, setProfile] = useState({ address: '', year_built: '', sq_footage: '', business_name: '' })
   const [editing, setEditing] = useState(false)
   const [loadingProfile, setLoadingProfile] = useState(true)
@@ -37,11 +16,6 @@ export default function Settings() {
   const [deleteConfirm, setDeleteConfirm] = useState('')
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState(null)
-
-  useEffect(() => {
-    const stored = localStorage.getItem(NOTIF_KEY)
-    if (stored) setNotifs(JSON.parse(stored))
-  }, [])
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -65,12 +39,6 @@ export default function Settings() {
     }
     fetchProfile()
   }, [user])
-
-  const updateNotif = (key, value) => {
-    const next = { ...notifs, [key]: value }
-    setNotifs(next)
-    localStorage.setItem(NOTIF_KEY, JSON.stringify(next))
-  }
 
   const handleSaveProfile = async () => {
     setSaving(true)
@@ -111,25 +79,6 @@ export default function Settings() {
   return (
     <div className="page">
       <h1 style={{ fontSize: 22, fontWeight: 800, marginBottom: 20 }}>Settings</h1>
-
-      <div className="card" style={{ marginBottom: 20 }}>
-        <h2 style={{ fontSize: 15, fontWeight: 700, marginBottom: 14 }}>Notifications</h2>
-
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-          <span style={{ fontSize: 14 }}>Push Notifications</span>
-          <Toggle checked={notifs.push} onChange={(v) => updateNotif('push', v)} />
-        </div>
-
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-          <span style={{ fontSize: 14 }}>Weekly Summary</span>
-          <Toggle checked={notifs.weeklySummary} onChange={(v) => updateNotif('weeklySummary', v)} />
-        </div>
-
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: 14 }}>Overdue Alerts</span>
-          <Toggle checked={notifs.overdueAlerts} onChange={(v) => updateNotif('overdueAlerts', v)} />
-        </div>
-      </div>
 
       <div className="card" style={{ marginBottom: 20 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
