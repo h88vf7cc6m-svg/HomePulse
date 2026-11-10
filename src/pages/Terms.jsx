@@ -16,14 +16,14 @@ export default function Terms() {
       </div>
 
       <h1 style={{ fontSize: 26, fontWeight: 900, marginBottom: 6 }}>Terms of Service</h1>
-      <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 32 }}>Last updated: July 10, 2026</p>
+      <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 32 }}>Last updated: November 9, 2026</p>
 
       <div style={{ lineHeight: 1.8, color: 'var(--text-secondary)', fontSize: 14 }}>
 
         <Section title="1. Acceptance of Terms">
           By creating an account or using HomePulse ("the Service"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the Service.
           <br /><br />
-          These Terms constitute a legally binding agreement between you and HomePulse365 ("HomePulse," "we," "us," or "our").
+          These Terms constitute a legally binding agreement between you and HomePulse365 LLC ("HomePulse," "we," "us," or "our").
         </Section>
 
         <Section title="2. Description of Service">
@@ -88,7 +88,7 @@ export default function Terms() {
         </Section>
 
         <Section title="8. Intellectual Property">
-          All content, features, and functionality of HomePulse — including but not limited to text, graphics, logos, and software — are the exclusive property of HomePulse365 and are protected by copyright and other intellectual property laws.
+          All content, features, and functionality of HomePulse — including but not limited to text, graphics, logos, and software — are the exclusive property of HomePulse365 LLC and are protected by copyright and other intellectual property laws.
           <br /><br />
           Your personal data and content you create within the app remain yours. You grant us a limited license to store and process your content solely to provide the Service.
         </Section>
