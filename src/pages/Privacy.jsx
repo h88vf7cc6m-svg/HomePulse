@@ -16,12 +16,12 @@ export default function Privacy() {
       </div>
 
       <h1 style={{ fontSize: 26, fontWeight: 900, marginBottom: 6 }}>Privacy Policy</h1>
-      <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 32 }}>Last updated: July 10, 2026</p>
+      <p style={{ color: 'var(--text-muted)', fontSize: 13, marginBottom: 32 }}>Last updated: November 9, 2026</p>
 
       <div style={{ lineHeight: 1.8, color: 'var(--text-secondary)', fontSize: 14 }}>
 
         <Section title="1. Who We Are">
-          HomePulse365 ("HomePulse," "we," "us," or "our") operates the HomePulse home maintenance app available at homepulse365.com. This Privacy Policy explains how we collect, use, and protect your information when you use our service.
+          HomePulse365 LLC ("HomePulse," "we," "us," or "our") operates the HomePulse home maintenance app available at homepulse365.com. This Privacy Policy explains how we collect, use, and protect your information when you use our service.
           <br /><br />
           Contact us at: <a href="mailto:support@homepulse365.com" style={{ color: 'var(--teal)' }}>support@homepulse365.com</a>
         </Section>
