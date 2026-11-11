@@ -3,7 +3,6 @@
 // subscription changes or is cancelled.
 //
 // Vercel environment variables it needs (Settings → Environment Variables):
-//   STRIPE_SECRET_KEY          – Stripe secret key (sk_live_…)
 //   STRIPE_WEBHOOK_SECRET      – signing secret of this webhook endpoint (whsec_…)
 //   SUPABASE_SERVICE_ROLE_KEY  – Supabase service_role key (server only, never in the app)
 //   SUPABASE_URL               – optional; falls back to VITE_SUPABASE_URL
@@ -20,18 +19,16 @@ function json(body, status = 200) {
 }
 
 export async function POST(request) {
-  const {
-    STRIPE_SECRET_KEY,
-    STRIPE_WEBHOOK_SECRET,
-    SUPABASE_SERVICE_ROLE_KEY,
-  } = process.env
+  const { STRIPE_WEBHOOK_SECRET, SUPABASE_SERVICE_ROLE_KEY } = process.env
   const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
-  if (!STRIPE_SECRET_KEY || !STRIPE_WEBHOOK_SECRET || !SUPABASE_SERVICE_ROLE_KEY || !supabaseUrl) {
+  if (!STRIPE_WEBHOOK_SECRET || !SUPABASE_SERVICE_ROLE_KEY || !supabaseUrl) {
     console.error('stripe-webhook: missing environment variables')
     return json({ error: 'Server not configured' }, 500)
   }
 
-  const stripe = new Stripe(STRIPE_SECRET_KEY)
+  // Verifying a webhook signature is done locally and makes no API call,
+  // so no Stripe secret key is needed here.
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_unused')
   const supabase = createClient(supabaseUrl, SUPABASE_SERVICE_ROLE_KEY, {
     auth: { persistSession: false },
   })
