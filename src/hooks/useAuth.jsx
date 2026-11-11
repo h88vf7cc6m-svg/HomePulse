@@ -37,6 +37,28 @@ export function AuthProvider({ children }) {
     return () => listener.subscription.unsubscribe()
   }, [])
 
+  // Checkout happens in the browser (Stripe), so when the user comes back to
+  // the app, quietly re-read their plan so a new subscription unlocks Pro.
+  const userId = session?.user?.id
+  useEffect(() => {
+    if (!userId) return
+    const refreshPlan = async () => {
+      if (document.visibilityState !== 'visible') return
+      const { data } = await supabase
+        .from('profiles')
+        .select('plan')
+        .eq('user_id', userId)
+        .maybeSingle()
+      if (data) setPlan(data.plan || 'free')
+    }
+    document.addEventListener('visibilitychange', refreshPlan)
+    window.addEventListener('focus', refreshPlan)
+    return () => {
+      document.removeEventListener('visibilitychange', refreshPlan)
+      window.removeEventListener('focus', refreshPlan)
+    }
+  }, [userId])
+
   // Always asks the database — never trust a cached flag, since a single
   // browser/device can be used by more than one account (a cached flag
   // isn't scoped to a user and would leak one account's status to another).
