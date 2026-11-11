@@ -3,9 +3,10 @@ import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
 import Modal from '../components/Modal'
 import logo from '../assets/logo.png'
+import { appleIAPAvailable, restore, manageSubscriptions } from '../lib/appStore'
 
 export default function Settings() {
-  const { user, accountType, plan, signOut, deleteAccount } = useAuth()
+  const { user, accountType, plan, refreshPlan, signOut, deleteAccount } = useAuth()
   const isBusiness = accountType === 'business'
   const [profile, setProfile] = useState({ address: '', year_built: '', sq_footage: '', business_name: '' })
   const [editing, setEditing] = useState(false)
@@ -16,6 +17,26 @@ export default function Settings() {
   const [deleteConfirm, setDeleteConfirm] = useState('')
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState(null)
+  const [restoring, setRestoring] = useState(false)
+  const [subMessage, setSubMessage] = useState(null)
+
+  const handleRestore = async () => {
+    setRestoring(true)
+    setSubMessage(null)
+    try {
+      const result = await restore()
+      if (result.active) {
+        await refreshPlan()
+        setSubMessage('HomePulse Pro restored.')
+      } else {
+        setSubMessage('No active HomePulse Pro subscription was found for this Apple ID.')
+      }
+    } catch (err) {
+      setSubMessage(err.message || 'Could not restore purchases.')
+    } finally {
+      setRestoring(false)
+    }
+  }
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -155,6 +176,24 @@ export default function Settings() {
         )}
       </div>
 
+      {appleIAPAvailable && (
+        <div className="card" style={{ marginBottom: 20 }}>
+          <p style={{ fontWeight: 700, fontSize: 15, marginBottom: 6 }}>Subscription</p>
+          <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 12 }}>
+            {plan === 'paid' ? 'You have HomePulse Pro.' : 'You are on the free plan.'}
+          </p>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button className="btn-secondary" onClick={handleRestore} disabled={restoring}>
+              {restoring ? 'Restoring…' : 'Restore Purchases'}
+            </button>
+            <button className="btn-secondary" onClick={() => manageSubscriptions().catch(() => {})}>
+              Manage Subscription
+            </button>
+          </div>
+          {subMessage && <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 10 }}>{subMessage}</p>}
+        </div>
+      )}
+
       <div
         style={{
           marginBottom: 20,
@@ -198,7 +237,7 @@ export default function Settings() {
         </p>
         {plan === 'paid' && (
           <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 12 }}>
-            Deleting your account doesn't cancel your subscription. Cancel it from your Stripe receipt email so you aren't charged again.
+            Deleting your account doesn't cancel your subscription. If you subscribed through Apple, cancel it in your App Store subscriptions; if you paid on our website, cancel it from your Stripe receipt email. That way you aren't charged again.
           </p>
         )}
         <label className="label">Type DELETE to confirm</label>

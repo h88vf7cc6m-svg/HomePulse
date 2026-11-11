@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { appleIAPAvailable, syncEntitlements, verifyWithServer, onTransactionUpdated } from '../lib/appStore'
 
 const AuthContext = createContext({})
 
@@ -40,24 +41,41 @@ export function AuthProvider({ children }) {
   // Checkout happens in the browser (Stripe), so when the user comes back to
   // the app, quietly re-read their plan so a new subscription unlocks Pro.
   const userId = session?.user?.id
+  const refreshPlan = async () => {
+    if (!userId) return
+    const { data } = await supabase
+      .from('profiles')
+      .select('plan')
+      .eq('user_id', userId)
+      .maybeSingle()
+    if (data) setPlan(data.plan || 'free')
+  }
+
   useEffect(() => {
     if (!userId) return
-    const refreshPlan = async () => {
-      if (document.visibilityState !== 'visible') return
-      const { data } = await supabase
-        .from('profiles')
-        .select('plan')
-        .eq('user_id', userId)
-        .maybeSingle()
-      if (data) setPlan(data.plan || 'free')
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') refreshPlan()
     }
-    document.addEventListener('visibilitychange', refreshPlan)
-    window.addEventListener('focus', refreshPlan)
+    document.addEventListener('visibilitychange', onVisible)
+    window.addEventListener('focus', onVisible)
     return () => {
-      document.removeEventListener('visibilitychange', refreshPlan)
-      window.removeEventListener('focus', refreshPlan)
+      document.removeEventListener('visibilitychange', onVisible)
+      window.removeEventListener('focus', onVisible)
     }
   }, [userId])
+
+  // iOS: pick up Apple subscriptions (renewals, purchases on another device,
+  // reinstalls) and let the server confirm them.
+  useEffect(() => {
+    if (!userId || !appleIAPAvailable) return
+    syncEntitlements().then((r) => r.active && refreshPlan()).catch(() => {})
+    let handle
+    onTransactionUpdated(({ jws }) => {
+      verifyWithServer([jws]).then((r) => r.active && refreshPlan()).catch(() => {})
+    }).then((h) => { handle = h })
+    return () => handle?.remove()
+  }, [userId])
+
 
   // Always asks the database — never trust a cached flag, since a single
   // browser/device can be used by more than one account (a cached flag
@@ -148,6 +166,7 @@ export function AuthProvider({ children }) {
       checkingOnboarding,
       accountType,
       plan,
+      refreshPlan,
       signIn,
       signUp,
       signOut,

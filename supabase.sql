@@ -238,3 +238,32 @@ DROP TRIGGER IF EXISTS protect_profile_billing ON profiles;
 CREATE TRIGGER protect_profile_billing
   BEFORE INSERT OR UPDATE ON profiles
   FOR EACH ROW EXECUTE FUNCTION public.protect_profile_billing();
+
+-- ============================================================
+-- Migration: Apple in-app purchases. The Apple endpoints
+-- (api/apple-verify.js, api/apple-notifications.js) record the
+-- subscription's original transaction id; users can't change it.
+-- ============================================================
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS apple_original_transaction_id text;
+CREATE INDEX IF NOT EXISTS profiles_apple_original_transaction_id_idx ON profiles (apple_original_transaction_id);
+
+CREATE OR REPLACE FUNCTION public.protect_profile_billing()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  IF current_user IN ('authenticated', 'anon') THEN
+    IF TG_OP = 'INSERT' THEN
+      NEW.plan := 'free';
+      NEW.stripe_customer_id := NULL;
+      NEW.apple_original_transaction_id := NULL;
+    ELSIF NEW.plan IS DISTINCT FROM OLD.plan
+       OR NEW.stripe_customer_id IS DISTINCT FROM OLD.stripe_customer_id
+       OR NEW.apple_original_transaction_id IS DISTINCT FROM OLD.apple_original_transaction_id THEN
+      RAISE EXCEPTION 'plan can only be changed through billing'
+        USING ERRCODE = '42501';
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$;
