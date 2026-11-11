@@ -204,3 +204,37 @@ $$;
 
 REVOKE ALL ON FUNCTION public.delete_own_account() FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.delete_own_account() TO authenticated;
+
+-- ============================================================
+-- Migration: Stripe billing. The Stripe webhook (api/stripe-webhook.js,
+-- using the service_role key) is the only thing allowed to change a
+-- profile's plan or Stripe customer. Signed-in users can still edit the
+-- rest of their own profile.
+-- ============================================================
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS stripe_customer_id text;
+CREATE INDEX IF NOT EXISTS profiles_stripe_customer_id_idx ON profiles (stripe_customer_id);
+
+CREATE OR REPLACE FUNCTION public.protect_profile_billing()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  -- Requests from the app run as 'authenticated' (or 'anon').
+  IF current_user IN ('authenticated', 'anon') THEN
+    IF TG_OP = 'INSERT' THEN
+      NEW.plan := 'free';
+      NEW.stripe_customer_id := NULL;
+    ELSIF NEW.plan IS DISTINCT FROM OLD.plan
+       OR NEW.stripe_customer_id IS DISTINCT FROM OLD.stripe_customer_id THEN
+      RAISE EXCEPTION 'plan can only be changed through billing'
+        USING ERRCODE = '42501';
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS protect_profile_billing ON profiles;
+CREATE TRIGGER protect_profile_billing
+  BEFORE INSERT OR UPDATE ON profiles
+  FOR EACH ROW EXECUTE FUNCTION public.protect_profile_billing();
