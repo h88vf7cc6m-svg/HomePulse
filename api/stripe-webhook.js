@@ -21,9 +21,15 @@ function json(body, status = 200) {
 export async function POST(request) {
   const { STRIPE_WEBHOOK_SECRET, SUPABASE_SERVICE_ROLE_KEY } = process.env
   const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
-  if (!STRIPE_WEBHOOK_SECRET || !SUPABASE_SERVICE_ROLE_KEY || !supabaseUrl) {
-    console.error('stripe-webhook: missing environment variables')
-    return json({ error: 'Server not configured' }, 500)
+  const missing = [
+    !STRIPE_WEBHOOK_SECRET && 'STRIPE_WEBHOOK_SECRET',
+    !SUPABASE_SERVICE_ROLE_KEY && 'SUPABASE_SERVICE_ROLE_KEY',
+    !supabaseUrl && 'SUPABASE_URL',
+  ].filter(Boolean)
+  if (missing.length) {
+    console.error('stripe-webhook: missing environment variables', missing)
+    // Names only, never values.
+    return json({ error: 'Server not configured', missing }, 500)
   }
 
   // Verifying a webhook signature is done locally and makes no API call,
