@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { Capacitor, registerPlugin } from '@capacitor/core'
 import { supabase } from './supabase'
 
@@ -18,6 +19,32 @@ const API_BASE = Capacitor.isNativePlatform() ? 'https://www.homepulse365.com' :
 export async function getProducts() {
   const { products } = await AppStore.getProducts({ productIds: Object.values(PRODUCT_IDS) })
   return products || []
+}
+
+// Loads the Apple products once per app session. Resolves to [] when Apple
+// purchases aren't available (e.g. before the Paid Apps agreement is active).
+let productsPromise = null
+export function loadProducts() {
+  if (!appleIAPAvailable) return Promise.resolve([])
+  if (!productsPromise) {
+    productsPromise = getProducts().catch(() => {
+      productsPromise = null
+      return []
+    })
+  }
+  return productsPromise
+}
+
+// null while loading, then the list of Apple products (empty if unavailable).
+export function useAppleProducts() {
+  const [products, setProducts] = useState(appleIAPAvailable ? null : [])
+  useEffect(() => {
+    if (!appleIAPAvailable) return
+    let live = true
+    loadProducts().then((list) => { if (live) setProducts(list) })
+    return () => { live = false }
+  }, [])
+  return products
 }
 
 // Sends signed Apple transactions to the server, which unlocks Pro if one is

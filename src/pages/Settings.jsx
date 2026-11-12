@@ -3,7 +3,7 @@ import { useAuth } from '../hooks/useAuth'
 import { supabase } from '../lib/supabase'
 import Modal from '../components/Modal'
 import logo from '../assets/logo.png'
-import { appleIAPAvailable, restore, manageSubscriptions } from '../lib/appStore'
+import { useAppleProducts, restore, manageSubscriptions } from '../lib/appStore'
 
 export default function Settings() {
   const { user, accountType, plan, refreshPlan, signOut, deleteAccount } = useAuth()
@@ -19,6 +19,8 @@ export default function Settings() {
   const [deleteError, setDeleteError] = useState(null)
   const [restoring, setRestoring] = useState(false)
   const [subMessage, setSubMessage] = useState(null)
+  const appleProducts = useAppleProducts()
+  const appleReady = !!appleProducts?.length
 
   const handleRestore = async () => {
     setRestoring(true)
@@ -176,7 +178,7 @@ export default function Settings() {
         )}
       </div>
 
-      {appleIAPAvailable && (
+      {appleReady && (
         <div className="card" style={{ marginBottom: 20 }}>
           <p style={{ fontWeight: 700, fontSize: 15, marginBottom: 6 }}>Subscription</p>
           <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 12 }}>

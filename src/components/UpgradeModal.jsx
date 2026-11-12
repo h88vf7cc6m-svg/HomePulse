@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import Modal from './Modal'
 import { useAuth } from '../hooks/useAuth'
-import { appleIAPAvailable, getProducts, purchase, restore, PRODUCT_IDS } from '../lib/appStore'
+import { useAppleProducts, purchase, restore, PRODUCT_IDS } from '../lib/appStore'
 
 const MONTHLY_LINK = import.meta.env.VITE_STRIPE_PAYMENT_LINK
 const YEARLY_LINK = import.meta.env.VITE_STRIPE_PAYMENT_LINK_YEARLY
@@ -14,16 +14,9 @@ function buildCheckoutUrl(link, user) {
 const linkStyle = { display: 'block', textAlign: 'center', textDecoration: 'none' }
 const fineStyle = { fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.5, marginTop: 12 }
 
-function AppleOptions({ user, onUnlocked }) {
-  const [products, setProducts] = useState(null)
+function AppleOptions({ user, products, onUnlocked }) {
   const [busy, setBusy] = useState(null)
   const [message, setMessage] = useState(null)
-
-  useEffect(() => {
-    getProducts()
-      .then((list) => setProducts(list))
-      .catch(() => setProducts([]))
-  }, [])
 
   const byId = Object.fromEntries((products || []).map((p) => [p.id, p]))
   const monthly = byId[PRODUCT_IDS.monthly]
@@ -58,9 +51,6 @@ function AppleOptions({ user, onUnlocked }) {
     }
   }
 
-  if (products === null) {
-    return <p style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center' }}>Loading prices…</p>
-  }
   if (!monthly && !yearly) return null
 
   return (
@@ -100,6 +90,8 @@ function AppleOptions({ user, onUnlocked }) {
 
 export default function UpgradeModal({ open, onClose, categoryName }) {
   const { user, refreshPlan } = useAuth()
+  const products = useAppleProducts()
+  const appleReady = !!products?.length
 
   const monthlyUrl = buildCheckoutUrl(MONTHLY_LINK, user)
   const yearlyUrl = buildCheckoutUrl(YEARLY_LINK, user)
@@ -134,9 +126,13 @@ export default function UpgradeModal({ open, onClose, categoryName }) {
         unlimited task templates, and document uploads across your whole home or business.
       </p>
 
-      {appleIAPAvailable && user && open && <AppleOptions user={user} onUnlocked={unlocked} />}
+      {products === null && (
+        <p style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center' }}>Loading prices…</p>
+      )}
 
-      {appleIAPAvailable && hasWeb && (
+      {appleReady && user && open && <AppleOptions user={user} products={products} onUnlocked={unlocked} />}
+
+      {appleReady && hasWeb && (
         <>
           <p style={{ fontSize: 13, color: 'var(--text-secondary)', textAlign: 'center', margin: '18px 0 10px' }}>
             Or pay on our website
@@ -145,9 +141,9 @@ export default function UpgradeModal({ open, onClose, categoryName }) {
         </>
       )}
 
-      {!appleIAPAvailable && hasWeb && webLinks(false)}
+      {products !== null && !appleReady && hasWeb && webLinks(false)}
 
-      {!appleIAPAvailable && !hasWeb && (
+      {products !== null && !appleReady && !hasWeb && (
         <>
           <button className="btn-primary" disabled title="Billing isn't set up yet">
             Upgrade — Coming Soon
